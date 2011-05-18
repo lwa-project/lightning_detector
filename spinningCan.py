@@ -183,25 +183,30 @@ class EFPanel(PlotPanel):
 		"""
 		Draw data.
 		"""
-		
-		from pylab import date2num
-		from matplotlib.dates import AutoDateLocator, MinuteLocator, SecondLocator
-		
-		if not hasattr( self, 'subplot' ):
-			self.ax1 = self.figure.add_subplot( 111 )
-
-		if len(self.field) < 3:
-			pass
-		else:
-			self.ax1.cla()
-			self.ax1.plot_date(date2num(self.time), self.field,  color='g', linestyle='-',  marker=' ')
-			self.ax1.plot_date(date2num(self.time), self.dfield, color='b', linestyle='--', marker=' ')
+		try:
+			from pylab import date2num
+			from matplotlib.dates import AutoDateLocator, MinuteLocator, SecondLocator
 			
-			self.ax1.set_xlabel('Time')
-			self.ax1.set_ylabel('E-Field [kV/m]')
-			self.locator = SecondLocator(bysecond=range(0,60,30))
-			self.ax1.xaxis.set_major_locator(self.locator)
-			self.figure.autofmt_xdate()
+			if not hasattr( self, 'subplot' ):
+				self.ax1 = self.figure.add_subplot( 111 )
+
+			if len(self.field) < 3:
+				pass
+			else:
+				self.ax1.cla()
+				self.ax1.plot_date(date2num(self.time), self.field,  color='g', linestyle='-',  marker=' ')
+				self.ax1.plot_date(date2num(self.time), self.dfield, color='b', linestyle='--', marker=' ')
+				
+				self.ax1.set_xlabel('Time')
+				self.ax1.set_ylabel('E-Field [kV/m]')
+				self.locator = SecondLocator(bysecond=range(0,60,20))
+				self.ax1.xaxis.set_major_locator(self.locator)
+				self.figure.autofmt_xdate()
+		except:
+			# This try...except block is a kludge to try to get around some of 
+			# the problems trying to do "animations" with matplotlib this way.
+			# There's got to be a better way to do this...
+			pass
 
 
 #----------------------------------------------------------------------
@@ -384,7 +389,7 @@ class TerminalFrame(wx.Frame):
 	def __set_properties(self):
 		# begin wxGlade: TerminalFrame.__set_properties
 		self.SetTitle("Serial Terminal")
-		self.SetSize((546, 910))
+		self.SetSize((546, 920))
 		# end wxGlade
 
 	def __do_layout(self):

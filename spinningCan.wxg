@@ -6,7 +6,7 @@
         <style>wxDEFAULT_FRAME_STYLE</style>
         <title>Serial Terminal</title>
         <menubar>1</menubar>
-        <size>546, 910</size>
+        <size>546, 920</size>
         <object class="wxMenuBar" name="frame_terminal_menubar" base="EditMenuBar">
             <menus>
                 <menu name="" label="&amp;File">
