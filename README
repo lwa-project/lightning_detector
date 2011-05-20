@@ -14,11 +14,10 @@ emf.c
   also computes the change in the electric field from one second to the next.
 
 spinningCan.py
-  Python script based on pySerial wxTerminal.py example that reads in from a 
-  user-selectable serial port and prints out the electric field and the change 
-  in the electric field at a rate of ~10 times per second.  This script uses the
-  spinningCan.wxg wxGlade design file for its interface.
+  Python script for interfacing with a Boltek EFM-100 via serial port and serving
+  up the data via multicast UDP.
 
-wxSerialConfigDialog.py
-  Python script from the pySerial examples used by spinningCan.py for setting 
-  the parameters for the serial port.
+spinningCanGUI.py
+  Python script based on pySerial wxTerminal.py example that reads in from a 
+  a multicast UDP address (224.168.2.9, port 7164) and prints out field and 
+  warning notices.
