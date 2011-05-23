@@ -3,6 +3,7 @@
 
 import sys
 import time
+import getopt
 import socket
 
 import wx
@@ -16,7 +17,8 @@ import matplotlib
 matplotlib.use('WXAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
-from matplotlib.dates import AutoDateLocator, MinuteLocator, SecondLocator
+from matplotlib.dates import *
+from matplotlib.ticker import *
 import pylab
 
 #----------------------------------------------------------------------
@@ -54,7 +56,7 @@ class EFM100(wx.Frame):
 	Simple terminal program for wxPython.
 	"""
 	
-	def __init__(self, parent, id, title):
+	def __init__(self, parent, id, title, mcastAddr="224.168.2.9", mcastPort=7163):
 		wx.Frame.__init__(self, parent, id, title=title, size=(800,800))
 		
 		self.timesF = []
@@ -62,6 +64,9 @@ class EFM100(wx.Frame):
 		self.timesD = []
 		self.deltas = []
 		
+		self.mcastAddr = mcastAddr
+		self.mcastPort = mcastPort
+
 		self.sock = None
 		self.thread = None
 		self.alive = threading.Event()
@@ -111,8 +116,8 @@ class EFM100(wx.Frame):
 		"""
 		
 		ANY = "0.0.0.0"
-		MCAST_ADDR = "224.168.2.9"
-		MCAST_PORT = 7163
+		MCAST_ADDR = self.mcastAddr
+		MCAST_PORT = self.mcastPort
 		
 		#create a UDP socket
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -162,13 +167,13 @@ class EFM100(wx.Frame):
 		# plot the data as a line series, and save the reference 
 		# to the plotted line series
 		#
-		self.plot1 = self.axes.plot([0,], [0,], linewidth=1, color='green')[0]
-		self.plot2 = self.axes.plot([0,], [0,], linewidth=1, color='blue', linestyle=':')[0]
-		
+		self.plot1 = self.axes.plot([2,], [0,], linewidth=1, color='green')[0]
+		self.plot2 = self.axes.plot([2,], [0,], linewidth=1, color='blue', linestyle=':')[0]
+
 		self.axes.set_xlabel('Time')
 		self.axes.set_ylabel('E-Field [kV/m]')
-		self.locator = SecondLocator(bysecond=range(0,60,30))
-		#self.axes.xaxis.set_major_locator(self.locator)
+		self.axes.xaxis.set_major_locator(LinearLocator(numticks=6))
+		self.axes.xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
 		self.figure.autofmt_xdate()
 		
 		self.canvas.draw()
@@ -178,8 +183,8 @@ class EFM100(wx.Frame):
 		Draw the plot.
 		"""
 		
+		xmin = self.timesF[0]
 		xmax = self.timesF[-1]
-		xmin = self.timesF[-121 if len(self.timesF) > 121 else 0]
 		
 		ymin = sorted(self.fields)[0]
 		ymax = sorted(self.fields)[-1]
@@ -253,8 +258,8 @@ class EFM100(wx.Frame):
 			self.fields.append(float(field))
 			
 			if len(self.timesF) > 120:
-				self.timesF = self.timesF[-121:-1]
-				self.fields = self.fields[-121:-1]
+				self.timesF = self.timesF[1:]
+				self.fields = self.fields[1:]
 			
 			#self.drawPlot()
 		elif mtch.group('type') == 'DELTA':
@@ -263,8 +268,8 @@ class EFM100(wx.Frame):
 			self.deltas.append(float(field))
 			
 			if len(self.timesD) > 120:
-				self.timesD = self.timesD[-121:-1]
-				self.deltas = self.deltas[-121:-1]
+				self.timesD = self.timesD[1:]
+				self.deltas = self.deltas[1:]
 			
 			self.drawPlot()
 		else:
@@ -285,16 +290,58 @@ class EFM100(wx.Frame):
 				pass
 
 
-class MyApp(wx.App):
-	def OnInit(self):
-		wx.InitAllImageHandlers()
-		frame = EFM100(None, -1, "EFM-100 Lightning Detector")
-		self.SetTopWindow(frame)
-		frame.Show(1)
+def usage(exitCode=None):
+	print """spinningCanGUI.py - Read data from a spinningCan.py lightning data 
+server and plot it.
+
+Usage: spinningCanGUI.py [OPTIONS]
+
+Options:
+-h, --help                  Display this help information
+-a, --address               Mulitcast address to connect to (default = 224.168.2.9)
+-p, --port                  Multicast port to connect on (default = 7163)
+"""
+
+	if exitCode is not None:
+		sys.exit(exitCode)
+	else:
 		return True
 
-# end of class MyApp
+
+def parseOptions(args):
+	config = {}
+	config['addr'] = "224.168.2.9"
+	config['port'] = 7163
+
+	try:
+		opts, args = getopt.getopt(args, "ha:p:", ["help", "address=", "port="])
+	except getopt.GetoptError, err:
+		# Print help information and exit:
+		print str(err) # will print something like "option -a not recognized"
+		usage(exitCode=2)
+	
+	# Work through opts
+	for opt, value in opts:
+		if opt in ('-h', '--help'):
+			usage(exitCode=0)
+		elif opt in ('-a', '--address'):
+			config['addr'] = str(value)
+		elif opt in ('-p', '--port'):
+			config['port'] = int(value)
+		else:
+			assert False
+	
+	# Add in arguments
+	config['args'] = args
+
+	# Return configuration
+	return config
+
 
 if __name__ == "__main__":
-	app = MyApp(0)
+	config = parseOptions(sys.argv[1:])
+
+	app = wx.App(0)
+	frame = EFM100(None, -1, "EFM-100 Lightning Detector", mcastAddr=config['addr'], mcastPort=config['port'])
 	app.MainLoop()
+

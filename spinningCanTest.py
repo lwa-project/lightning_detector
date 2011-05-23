@@ -8,10 +8,12 @@ atmospheric electric field monitor and printing out the electric field and it ch
 
 import re
 import sys
+import numpy
 import serial
 import socket
 import getopt
 import threading
+from time import sleep
 from datetime import datetime, timedelta
 
 # Electric field and lightning warning levels
@@ -224,25 +226,10 @@ class dataServer(object):
 def main(args):
 	config = parseOptions(args)
 	
-	# Set the serial port parameters
-	efm100 = serial.Serial()
-	efm100.timeout = 0.5
-	efm100.port = config['SERIAL_PORT']
-	efm100.baudrate = 9600
-	efm100.bytesize = 8
-	efm100.stopbits = 1
-	efm100.parity = 'N'
-	
 	# Set the field averaging options
 	c = 0
 	avgField  = 0.0
 	avgDField = 0.0
-	
-	# Open the port and find the start of the data stream
-	efm100.open()
-	text = efm100.read(1)
-	while text != '$':
-		text = efm100.read(1)
 
 	# Start the data server
 	server = dataServer()
@@ -263,103 +250,94 @@ def main(args):
 	# been sent).
 	try:
 		while True:
-			if text:
-				text = text + efm100.read(13)
-				text = text.replace('\r\n', '\n')
+			t = datetime.now()
+			f = numpy.random.randn(1)[0] * 0.01
+			sleep(0.05)
+			hF = highField(f, config)
+			vF = veryHighField(f, config)
+			try:
+				dF = f-lastField
+			except NameError:
+				dF = 0
+			l,d = lightning(dF, config)
+			lastField = f
 				
-				# Parse the string and extract the various bits that we are
-				# interested in using parseField
-				t = datetime.now()
-				f, s, v = parseField(text)
-				hF = highField(f, config)
-				vF = veryHighField(f, config)
-				try:
-					dF = f-lastField
-				except NameError:
-					dF = 0
-				l,d = lightning(dF, config)
-				lastField = f
+			# Average the field over 20 samples
+			avgField += f
+			avgDField += dF
+			c += 1
+			if c is 40:
+				avgField /= c
+				avgDField /= c
 				
-				# Average the field over 20 samples
-				avgField += f
-				avgDField += dF
-				c += 1
-				if c is 40:
-					avgField /= c
-					avgDField /= c
-					
-					server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgField))
-					server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgDField))
-					
-					avgField = 0.0
-					avgDField = 0.0
-					c = 0
+				server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgField))
+				server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgDField))
 				
-				# Issue field warnings, if needed
-				fieldText = None
-				if vF:
-					if lastFieldEvent is None:
-						fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
-					elif t >= lastFieldEvent + fieldInterval:
-						fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
-					else:
-						pass
-					
-					fieldHigh = True
-					lastFieldEvent = t
-					
-				elif hF:
-					if lastFieldEvent is None:
-						fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
-					elif t >= lastFieldEvent + fieldInterval:
-						fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
-					else:
-						pass
-					
-					fieldHigh = True
-					lastFieldEvent = t
-					
+				avgField = 0.0
+				avgDField = 0.0
+				c = 0
+				
+			# Issue field warnings, if needed
+			fieldText = None
+			if vF:
+				if lastFieldEvent is None:
+					fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+				elif t >= lastFieldEvent + fieldInterval:
+					fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
 				else:
-					if lastFieldEvent is None:
-						pass
-					elif t >= lastFieldEvent + fieldClearedInterval and fieldHigh:
-						fieldText = "[%s] NOTICE: High field cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
-						fieldHigh = False
-					else:
-						pass
+					pass
 				
-				# Issue lightning warnings, if needed
-				lightningText = None
-				if l:
-					if lastLightningEvent is None:
-						lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
-					elif t >= lastLightningEvent + lightningInterval:
-						lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
-					
-					lightningDetected = True
-					lastLightningEvent = t
+				fieldHigh = True
+				lastFieldEvent = t
+				
+			elif hF:
+				if lastFieldEvent is None:
+					fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+				elif t >= lastFieldEvent + fieldInterval:
+					fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
 				else:
-					if lastLightningEvent is None:
-						pass
-					elif t >= lastLightningEvent + lightningClearedInterval and lightningDetected:
-						fieldText = "[%s] NOTICE: lightning cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
-						lightningDetected = False
-					else:
-						pass
-						
-				if fieldText is not None:
-					print fieldText
-					server.send(fieldText)
+					pass
+				
+				fieldHigh = True
+				lastFieldEvent = t
+				
+			else:
+				if lastFieldEvent is None:
+					pass
+				elif t >= lastFieldEvent + fieldClearedInterval and fieldHigh:
+					fieldText = "[%s] NOTICE: High field cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
+					fieldHigh = False
+				else:
+					pass
+			
+			# Issue lightning warnings, if needed
+			lightningText = None
+			if l:
+				if lastLightningEvent is None:
+					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
+				elif t >= lastLightningEvent + lightningInterval:
+					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
+				
+				lightningDetected = True
+				lastLightningEvent = t
+			else:
+				if lastLightningEvent is None:
+					pass
+				elif t >= lastLightningEvent + lightningClearedInterval and lightningDetected:
+					fieldText = "[%s] NOTICE: lightning cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
+					lightningDetected = False
+				else:
+					pass
 					
-				if lightningText is not None:
-					print lightningText
-					server.send(lightningText)
-
-				# Start the next loop
-				text = efm100.read(1)
+			if fieldText is not None:
+				print fieldText
+				server.send(fieldText)
+				
+			if lightningText is not None:
+				print lightningText
+				server.send(lightningText)
 				
 	except KeyboardInterrupt:
-		efm100.close()
 		server.stop()
 		print ''
 
