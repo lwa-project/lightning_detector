@@ -232,7 +232,8 @@ def main(args):
 	avgDField = 0.0
 
 	# Start the data server
-	server = dataServer()
+	server = dataServer(mcastAddr=config['MCAST_ADDR'], mcastPort=int(config['MCAST_PORT']), 
+				sendPort=int(config['SEND_PORT']))
 	server.start()
 
 	# Set the warning suppression interval
