@@ -2,7 +2,7 @@ Lightning Detector Software
 ===========================
 
 This directory contains a collection of software to run and detect possible 
-lightning with the Boltek EMF-100 atmospheric electric field monitor.  This
+lightning with the Boltek EFM-100 atmospheric electric field monitor.  This
 software provides a alternative to the Windows-only "EFM-100 Atmospheric 
 Electric Field Monitor V1.18 Software".
 
