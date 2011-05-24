@@ -17,7 +17,16 @@ spinningCan.py
   Python script for interfacing with a Boltek EFM-100 via serial port and serving
   up the data via multicast UDP.
 
+spinningCanCLI.py
+  Python script to print out the packets comming from spinningCan.py on the command 
+  line if no GUI is wanted or possible.
+
 spinningCanGUI.py
   Python script based on pySerial wxTerminal.py example that reads in from a 
   a multicast UDP address (224.168.2.9, port 7164) and prints out field and 
   warning notices.
+
+spinningCanTest.py
+  Python scirpt to serve up fake lightning data so that the various interfaces can 
+  be tested without actually hooking up a Boltek EFM-100.
+

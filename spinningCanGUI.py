@@ -131,7 +131,7 @@ class EFM100(wx.Frame):
 		#The address for the multicast group is the third param
 		status = self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
 				socket.inet_aton(MCAST_ADDR) + socket.inet_aton(ANY))
-		self.sock.setblocking(0)
+		self.sock.setblocking(1)
 		
 		self.thread = threading.Thread(target=self.SocketThread)
 		self.thread.setDaemon(1)

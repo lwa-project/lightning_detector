@@ -87,6 +87,7 @@ def parseConfigFile(filename):
 	config['MCAST_PORT']  = 7163
 	config['SEND_PORT']   = 7164
 	
+	config['FIELD_AVERAGE']          = 1.0
 	config['HIGH_FIELD']             = 5.0
 	config['VERY_HIGH_FIELD']        = 7.0
 	config['FIELD_REPORT_INTERVAL']  = 1.0
@@ -235,6 +236,9 @@ def main(args):
 	
 	# Set the field averaging options
 	c = 0
+	avgLimit = int(round(float(config['FIELD_AVERAGE'])*20))
+	if avgLimit < 1:
+		avgLimit = 1
 	avgField  = 0.0
 	avgDField = 0.0
 	
@@ -285,7 +289,7 @@ def main(args):
 				avgField += f
 				avgDField += dF
 				c += 1
-				if c is 40:
+				if c == avgLimit:
 					avgField /= c
 					avgDField /= c
 					
