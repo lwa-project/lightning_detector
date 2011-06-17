@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Graphical interface to the lightning data served up by spinningCan.py.
+
+$Rev$
+$LastChangedBy$
+$LastChangedDate$
+"""
+
 import sys
 import time
 import getopt
