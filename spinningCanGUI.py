@@ -71,6 +71,7 @@ class EFM100(wx.Frame):
 		self.fields = []
 		self.timesD = []
 		self.deltas = []
+		self.strikes = {}
 		
 		self.mcastAddr = mcastAddr
 		self.mcastPort = mcastPort
@@ -209,6 +210,12 @@ class EFM100(wx.Frame):
 		self.plot2.set_xdata(pylab.date2num(self.timesD))
 		self.plot2.set_ydata(self.deltas)
 		
+		for t in self.strikes.keys():
+			if t < xmin:
+				for s in self.strikes[t]:
+					del self.axes.lines[self.axes.lines.index(s)]
+				del self.strikes[t]
+		
 		self.canvas.draw()
 		
 	def markLightningEvent(self, t):
@@ -216,7 +223,10 @@ class EFM100(wx.Frame):
 		Mark a lightning strike in red.
 		"""
 		
-		self.plot1.vlines(t, -30, 30, color='ref', linestyle='--')
+		try:
+			self.strikes[t].append(self.axes.vlines(t, -30, 30, color='red', linestyle='--'))
+		except KeyError:
+			self.strikes[t] = [self.axes.vlines(t, -30, 30, color='red', linestyle='--'),]
 
 	def onExit(self, event):
 		"""
