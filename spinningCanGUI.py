@@ -289,7 +289,7 @@ class EFM100(wx.Frame):
 				self.deltas = self.deltas[1:]
 			
 			self.drawPlot()
-		elif match.group('type') == 'LIGHTNING':
+		elif mtch.group('type') == 'LIGHTNING':
 			self.markLightningEvent(t)
 			
 			self.textCtrl.AppendText(text+'\n')
