@@ -195,6 +195,8 @@ class EFM100(wx.Frame):
 		xmax = self.timesF[-1]
 		
 		ymin = sorted(self.fields)[0]
+		if ymin > -0.05:
+			ymin = -0.05
 		ymax = sorted(self.fields)[-1]
 		
 		self.axes.set_xbound(lower=xmin, upper=xmax)
@@ -208,6 +210,13 @@ class EFM100(wx.Frame):
 		self.plot2.set_ydata(self.deltas)
 		
 		self.canvas.draw()
+		
+	def markLightningEvent(self, t):
+		"""
+		Mark a lightning strike in red.
+		"""
+		
+		self.plot1.vlines(t, -30, 30, color='ref', linestyle='--')
 
 	def onExit(self, event):
 		"""
@@ -265,7 +274,7 @@ class EFM100(wx.Frame):
 			self.timesF.append(t)
 			self.fields.append(float(field))
 			
-			if len(self.timesF) > 120:
+			if len(self.timesF) > 180:
 				self.timesF = self.timesF[1:]
 				self.fields = self.fields[1:]
 			
@@ -275,11 +284,15 @@ class EFM100(wx.Frame):
 			self.timesD.append(t)
 			self.deltas.append(float(field))
 			
-			if len(self.timesD) > 120:
+			if len(self.timesD) > 180:
 				self.timesD = self.timesD[1:]
 				self.deltas = self.deltas[1:]
 			
 			self.drawPlot()
+		elif match.group('type') == 'LIGHTNING':
+			self.markLightningEvent(t)
+			
+			self.textCtrl.AppendText(text+'\n')
 		else:
 			self.textCtrl.AppendText(text+'\n')
 
