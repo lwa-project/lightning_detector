@@ -226,6 +226,19 @@ class dataServer(object):
 			self.sock.sendto(data, (self.mcastAddr, self.mcastPort) )
 
 
+def alignDataStream(SerialPort):
+	"""
+	Read from the SerialPort one byte at a time until we find a '$' (which marks
+	the start of a EFM-100 data entry).  Return the dollar sign when we find it
+	"""
+	
+	text = SerialPort.read(1)
+	while text != '$':
+		text = SerialPort.read(1)
+		
+	return text
+
+
 def main(args):
 	config = parseOptions(args)
 	
@@ -240,17 +253,19 @@ def main(args):
 	
 	# Set the field averaging options
 	c = 0
+	cL = 0
 	avgLimit = int(round(float(config['FIELD_AVERAGE'])*20))
 	if avgLimit < 1:
 		avgLimit = 1
 	avgField  = 0.0
 	avgDField = 0.0
+	avgFieldL = 0.0
+	avgDFieldL = 0.0
+	avgLimitL = 10
 	
 	# Open the port and find the start of the data stream
 	efm100.open()
-	text = efm100.read(1)
-	while text != '$':
-		text = efm100.read(1)
+	text = alignDataStream(efm100)
 
 	# Start the data server
 	server = dataServer(mcastAddr=config['MCAST_ADDR'], mcastPort=int(config['MCAST_PORT']), 
@@ -283,13 +298,29 @@ def main(args):
 				hF = highField(f, config)
 				vF = veryHighField(f, config)
 				try:
-					dF = f-lastField
+					dF = f - lastField
 				except NameError:
 					dF = 0
-				l,d = lightning(dF, config)
 				lastField = f
 				
-				# Average the field over 20 samples
+				# Average the field over `avgLimitL` samples for lightning detection
+				avgFieldL += f
+				avgDFieldL += dF
+				cL += 1
+				if c == avgLimitL:
+					avgFieldL /= cL
+					avgDFieldL /= cL
+					
+					l,d = lightning(avgDFieldL, config)
+					
+					avgFieldL = 0.0
+					avgDFieldL = 0.0
+					cL = 0.0
+				else:
+					l = False
+					d = 100.0
+				
+				# Average the field over `avgLimit` samples
 				avgField += f
 				avgDField += dF
 				c += 1
@@ -364,8 +395,12 @@ def main(args):
 					print lightningText
 					server.send(lightningText)
 
-				# Start the next loop
+				# Start the next loop.  If we don't get enough characters (because 
+				# the detector has lost power, for instance).  Run the re-alignment
+				# function again to try to get the stream back.
 				text = efm100.read(1)
+				if len(text) < 1:
+					text = alignDataStream(efm100)
 				
 	except KeyboardInterrupt:
 		efm100.close()
