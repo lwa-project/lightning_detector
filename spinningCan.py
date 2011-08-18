@@ -261,7 +261,7 @@ def main(args):
 	avgDField = 0.0
 	avgFieldL = 0.0
 	avgDFieldL = 0.0
-	avgLimitL = 10
+	avgLimitL = 5
 	
 	# Open the port and find the start of the data stream
 	efm100.open()
@@ -307,7 +307,7 @@ def main(args):
 				avgFieldL += f
 				avgDFieldL += dF
 				cL += 1
-				if c == avgLimitL:
+				if cL == avgLimitL:
 					avgFieldL /= cL
 					avgDFieldL /= cL
 					
