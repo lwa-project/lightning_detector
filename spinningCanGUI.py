@@ -199,6 +199,8 @@ class EFM100(wx.Frame):
 		if ymin > -0.05:
 			ymin = -0.05
 		ymax = sorted(self.fields)[-1]
+		if ymax < 0.1:
+			ymax = 0.1
 		
 		self.axes.set_xbound(lower=xmin, upper=xmax)
 		self.axes.set_ybound(lower=ymin, upper=ymax)
@@ -213,7 +215,7 @@ class EFM100(wx.Frame):
 		for t in self.strikes.keys():
 			if t < xmin:
 				for s in self.strikes[t]:
-					del self.axes.lines[self.axes.lines.index(s)]
+					self.axes.lines.remove(s)
 				del self.strikes[t]
 		
 		self.canvas.draw()
@@ -223,10 +225,11 @@ class EFM100(wx.Frame):
 		Mark a lightning strike in red.
 		"""
 		
+		line, = self.axes.plot([t,t], [-30,30], color='red', linestyle='--')
 		try:
-			self.strikes[t].append(self.axes.vlines(t, -30, 30, color='red', linestyle='--'))
+			self.strikes[t].append(line)
 		except KeyError:
-			self.strikes[t] = [self.axes.vlines(t, -30, 30, color='red', linestyle='--'),]
+			self.strikes[t] = [line,]
 
 	def onExit(self, event):
 		"""
