@@ -26,6 +26,9 @@ LIGHTNING_MIN_FIELD_CHANGE = 0.05
 # Electric field string regular expression
 fieldRE = re.compile('\$(?P<field>[-+]\d{2}\.\d{2}),(?P<status>\d)\*(?P<checksum>[0-9A-F]{2})')
 
+# Date formating string
+dateFmt = "%Y-%m-%d %H:%M:%S.%f"
+
 
 def usage(exitCode=None):
 	print """spinningCan.py - Read data from a Boltek EFM-100 atmosphereic 
@@ -37,6 +40,7 @@ Usage: spinningCan.py [OPTIONS]
 Options:
 -h, --help                  Display this help information
 -c, --config-file           Path to configuration file
+-r, --record-to             Record the raw electric field data to a file
 """
 
 	if exitCode is not None:
@@ -48,9 +52,10 @@ Options:
 def parseOptions(args):
 	config = {}
 	config['configFile'] = 'lightning.cfg'
+	config['recordFile'] = None
 
 	try:
-		opts, args = getopt.getopt(args, "hc:", ["help", "config-file="])
+		opts, args = getopt.getopt(args, "hc:r:", ["help", "config-file=", "record-to="])
 	except getopt.GetoptError, err:
 		# Print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -62,6 +67,8 @@ def parseOptions(args):
 			usage(exitCode=0)
 		elif opt in ('-c', '--config-file'):
 			config['configFile'] = str(value)
+		elif opt in('-r', '--record-to'):
+			config['recordFile'] = str(value)
 		else:
 			assert False
 	
@@ -229,7 +236,7 @@ class dataServer(object):
 def alignDataStream(SerialPort):
 	"""
 	Read from the SerialPort one byte at a time until we find a '$' (which marks
-	the start of a EFM-100 data entry).  Return the dollar sign when we find it
+	the start of a EFM-100 data entry).  Return the dollar sign when we find it.
 	"""
 	
 	text = SerialPort.read(1)
@@ -251,6 +258,13 @@ def main(args):
 	efm100.stopbits = 1
 	efm100.parity = 'N'
 	
+	# Setup the recording option.  If we aren't supposed to record, set
+	# `rFH` to None so that we can safely skip over it in the code.
+	if config['recordFile'] is not None:
+		rFH = open(config['recordFile'], 'a')
+	else:
+		rFH = None
+	
 	# Set the field averaging options
 	c = 0
 	cL = 0
@@ -261,7 +275,7 @@ def main(args):
 	avgDField = 0.0
 	avgFieldL = 0.0
 	avgDFieldL = 0.0
-	avgLimitL = 5
+	avgLimitL = 4
 	
 	# Open the port and find the start of the data stream
 	efm100.open()
@@ -292,9 +306,13 @@ def main(args):
 				text = text.replace('\r\n', '\n')
 				
 				# Parse the string and extract the various bits that we are
-				# interested in using parseField
+				# interested in using parseField and record it if needed
 				t = datetime.now()
 				f, s, v = parseField(text)
+				if rFH is not None and v:
+					rFH.write("%.6f  %+7.3f kV/m\n", t, f)
+				
+				# Figure out high fields
 				hF = highField(f, config)
 				vF = veryHighField(f, config)
 				try:
@@ -328,8 +346,8 @@ def main(args):
 					avgField /= c
 					avgDField /= c
 					
-					server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgField))
-					server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgDField))
+					server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime(dateFmt), avgField))
+					server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime(dateFmt), avgDField))
 					
 					avgField = 0.0
 					avgDField = 0.0
@@ -339,9 +357,9 @@ def main(args):
 				fieldText = None
 				if vF:
 					if lastFieldEvent is None:
-						fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+						fieldText = "[%s] WARNING: very high field" % t.strftime(dateFmt)
 					elif t >= lastFieldEvent + fieldInterval:
-						fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+						fieldText = "[%s] WARNING: very high field" % t.strftime(dateFmt)
 					else:
 						pass
 					
@@ -350,9 +368,9 @@ def main(args):
 					
 				elif hF:
 					if lastFieldEvent is None:
-						fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+						fieldText = "[%s] WARNING: high field" % t.strftime(dateFmt)
 					elif t >= lastFieldEvent + fieldInterval:
-						fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+						fieldText = "[%s] WARNING: high field" % t.strftime(dateFmt)
 					else:
 						pass
 					
@@ -363,7 +381,7 @@ def main(args):
 					if lastFieldEvent is None:
 						pass
 					elif t >= lastFieldEvent + fieldClearedInterval and fieldHigh:
-						fieldText = "[%s] NOTICE: High field cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
+						fieldText = "[%s] NOTICE: High field cleared" % t.strftime(dateFmt)
 						fieldHigh = False
 					else:
 						pass
@@ -372,9 +390,9 @@ def main(args):
 				lightningText = None
 				if l:
 					if lastLightningEvent is None:
-						lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
+						lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
 					elif t >= lastLightningEvent + lightningInterval:
-						lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
+						lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
 					
 					lightningDetected = True
 					lastLightningEvent = t
@@ -382,11 +400,12 @@ def main(args):
 					if lastLightningEvent is None:
 						pass
 					elif t >= lastLightningEvent + lightningClearedInterval and lightningDetected:
-						fieldText = "[%s] NOTICE: lightning cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
+						fieldText = "[%s] NOTICE: lightning cleared" % t.strftime(dateFmt)
 						lightningDetected = False
 					else:
 						pass
 						
+				# Actually send the message out over UDP
 				if fieldText is not None:
 					print fieldText
 					server.send(fieldText)
@@ -405,6 +424,10 @@ def main(args):
 	except KeyboardInterrupt:
 		efm100.close()
 		server.stop()
+		
+		if rFH is not None:
+			rFH.close()
+		
 		print ''
 
 

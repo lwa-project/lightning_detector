@@ -28,6 +28,9 @@ LIGHTNING_MIN_FIELD_CHANGE = 0.05
 # Electric field string regular expression
 fieldRE = re.compile('\$(?P<field>[-+]\d{2}\.\d{2}),(?P<status>\d)\*(?P<checksum>[0-9A-F]{2})')
 
+# Date formating string
+dateFmt = "%Y-%m-%d %H:%M:%S.%f"
+
 
 def usage(exitCode=None):
 	print """spinningCan.py - Read data from a Boltek EFM-100 atmosphereic 
@@ -39,6 +42,7 @@ Usage: spinningCan.py [OPTIONS]
 Options:
 -h, --help                  Display this help information
 -c, --config-file           Path to configuration file
+-r, --record-to             Record the raw electric field data to a file
 """
 
 	if exitCode is not None:
@@ -50,9 +54,10 @@ Options:
 def parseOptions(args):
 	config = {}
 	config['configFile'] = 'lightning.cfg'
+	config['recordFile'] = None
 
 	try:
-		opts, args = getopt.getopt(args, "hc:", ["help", "config-file="])
+		opts, args = getopt.getopt(args, "hc:r:", ["help", "config-file=", "record-to="])
 	except getopt.GetoptError, err:
 		# Print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -64,6 +69,8 @@ def parseOptions(args):
 			usage(exitCode=0)
 		elif opt in ('-c', '--config-file'):
 			config['configFile'] = str(value)
+		elif opt in('-r', '--record-to'):
+			config['recordFile'] = str(value)
 		else:
 			assert False
 	
@@ -231,6 +238,13 @@ class dataServer(object):
 def main(args):
 	config = parseOptions(args)
 	
+	# Setup the recording option.  If we aren't supposed to record, set
+	# `rFH` to None so that we can safely skip over it in the code.
+	if config['recordFile'] is not None:
+		rFH = open(config['recordFile'], 'a')
+	else:
+		rFH = None
+	
 	# Set the field averaging options
 	c = 0
 	avgLimit = int(round(float(config['FIELD_AVERAGE'])*20))
@@ -261,7 +275,9 @@ def main(args):
 		while True:
 			t = datetime.now()
 			f = numpy.random.randn(1)[0] * 0.01
-			sleep(0.05)
+			if rFH is not None:
+					rFH.write("%.6f  %+7.3f kV/m\n", t, f)
+			sleep(0.05 - (datetime.now() - t))
 			hF = highField(f, config)
 			vF = veryHighField(f, config)
 			try:
@@ -279,8 +295,8 @@ def main(args):
 				avgField /= c
 				avgDField /= c
 				
-				server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgField))
-				server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime("%Y-%m-%d %H:%M:%S"), avgDField))
+				server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime(dateFmt), avgField))
+				server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime(dateFmt), avgDField))
 				
 				avgField = 0.0
 				avgDField = 0.0
@@ -290,9 +306,9 @@ def main(args):
 			fieldText = None
 			if vF:
 				if lastFieldEvent is None:
-					fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+					fieldText = "[%s] WARNING: very high field" % t.strftime(dateFmt)
 				elif t >= lastFieldEvent + fieldInterval:
-					fieldText = "[%s] WARNING: very high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+					fieldText = "[%s] WARNING: very high field" % t.strftime(dateFmt)
 				else:
 					pass
 				
@@ -301,9 +317,9 @@ def main(args):
 				
 			elif hF:
 				if lastFieldEvent is None:
-					fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+					fieldText = "[%s] WARNING: high field" % t.strftime(dateFmt)
 				elif t >= lastFieldEvent + fieldInterval:
-					fieldText = "[%s] WARNING: high field" % t.strftime("%Y-%m-%d %H:%M:%S")
+					fieldText = "[%s] WARNING: high field" % t.strftime(dateFmt)
 				else:
 					pass
 				
@@ -314,7 +330,7 @@ def main(args):
 				if lastFieldEvent is None:
 					pass
 				elif t >= lastFieldEvent + fieldClearedInterval and fieldHigh:
-					fieldText = "[%s] NOTICE: High field cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
+					fieldText = "[%s] NOTICE: High field cleared" % t.strftime(dateFmt)
 					fieldHigh = False
 				else:
 					pass
@@ -323,9 +339,9 @@ def main(args):
 			lightningText = None
 			if l:
 				if lastLightningEvent is None:
-					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
+					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
 				elif t >= lastLightningEvent + lightningInterval:
-					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime("%Y-%m-%d %H:%M:%S"), d)
+					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
 				
 				lightningDetected = True
 				lastLightningEvent = t
@@ -333,7 +349,7 @@ def main(args):
 				if lastLightningEvent is None:
 					pass
 				elif t >= lastLightningEvent + lightningClearedInterval and lightningDetected:
-					fieldText = "[%s] NOTICE: lightning cleared" % t.strftime("%Y-%m-%d %H:%M:%S")
+					fieldText = "[%s] NOTICE: lightning cleared" % t.strftime(dateFmt)
 					lightningDetected = False
 				else:
 					pass

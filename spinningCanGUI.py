@@ -73,6 +73,9 @@ class EFM100(wx.Frame):
 		self.deltas = []
 		self.strikes = {}
 		
+		# Number of points to display in the plot window
+		self.nKeep = 180
+		
 		self.mcastAddr = mcastAddr
 		self.mcastPort = mcastPort
 
@@ -195,10 +198,10 @@ class EFM100(wx.Frame):
 		xmin = self.timesF[0]
 		xmax = self.timesF[-1]
 		
-		ymin = sorted(self.fields)[0]
+		ymin = sorted(self.fields)[ 0] - 0.05
 		if ymin > -0.05:
 			ymin = -0.05
-		ymax = sorted(self.fields)[-1]
+		ymax = sorted(self.fields)[-1] + 0.05
 		if ymax < 0.1:
 			ymax = 0.1
 		
@@ -281,15 +284,15 @@ class EFM100(wx.Frame):
 		text = event.data
 		
 		mtch = dataRE.match(text)
-		t = datetime.strptime(mtch.group('date'), "%Y-%m-%d %H:%M:%S")
+		t = datetime.strptime(mtch.group('date'), "%Y-%m-%d %H:%M:%S.%f")
 		if mtch.group('type') == 'FIELD':
 			field, junk = mtch.group('data').split(None, 1)
 			self.timesF.append(t)
 			self.fields.append(float(field))
 			
-			if len(self.timesF) > 180:
-				self.timesF = self.timesF[1:]
-				self.fields = self.fields[1:]
+			if len(self.timesF) > self.nKeep:
+				self.timesF = self.timesF[1:(self.nKeep+1)]
+				self.fields = self.fields[1:(self.nKeep+1)]
 			
 			#self.drawPlot()
 		elif mtch.group('type') == 'DELTA':
@@ -297,9 +300,9 @@ class EFM100(wx.Frame):
 			self.timesD.append(t)
 			self.deltas.append(float(field))
 			
-			if len(self.timesD) > 180:
-				self.timesD = self.timesD[1:]
-				self.deltas = self.deltas[1:]
+			if len(self.timesD) > self.nKeep:
+				self.timesD = self.timesD[1:(self.nKeep+1)]
+				self.deltas = self.deltas[1:(self.nKeep+1)]
 			
 			self.drawPlot()
 		elif mtch.group('type') == 'LIGHTNING':
