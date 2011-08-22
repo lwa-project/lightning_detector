@@ -310,7 +310,7 @@ def main(args):
 				t = datetime.now()
 				f, s, v = parseField(text)
 				if rFH is not None and v:
-					rFH.write("%.6f  %+7.3f kV/m\n" % (t, f))
+					rFH.write("%s  %+7.3f kV/m\n" % (t.strftime(dateFmt), f))
 				
 				# Figure out high fields
 				hF = highField(f, config)
