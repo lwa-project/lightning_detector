@@ -276,7 +276,7 @@ def main(args):
 			t = datetime.now()
 			f = numpy.random.randn(1)[0] * 0.01
 			if rFH is not None:
-					rFH.write("%.6f  %+7.3f kV/m\n", t, f)
+					rFH.write("%.6f  %+7.3f kV/m\n" % (t, f))
 			sleep(0.05 - (datetime.now() - t))
 			hF = highField(f, config)
 			vF = veryHighField(f, config)
