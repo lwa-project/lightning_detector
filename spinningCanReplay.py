@@ -237,10 +237,9 @@ def main(args):
 	# Set the field averaging options
 	c = 0
 	avgLimit = int(round(float(config['FIELD_AVERAGE'])*20))
-	if avgLimit < 1:
-		avgLimit = 1
-	avgField  = 0.0
-	avgDField = 0.0
+	if avgLimit < 3:
+		avgLimit = 3
+	movingField = numpy.zeros(avgLimit)
 
 	# Start the data server
 	server = dataServer(mcastAddr=config['MCAST_ADDR'], mcastPort=int(config['MCAST_PORT']), 
@@ -250,10 +249,10 @@ def main(args):
 	# Set the warning suppression interval
 	fieldHigh = False
 	lightningDetected = False
-	fieldInterval = timedelta(0, 60*int(float(config['FIELD_REPORT_INTERVAL'])))
-	fieldClearedInterval = timedelta(0, 60*int(float(config['FIELD_CLEARED_INTERVAL'])))
-	lightningInterval = timedelta(0, 60*int(float(config['LIGHTNING_REPORT_INTERVAL'])))
-	lightningClearedInterval = timedelta(0, 60*int(float(config['LIGHTNING_CLEARED_INTERVAL'])))
+	fieldInterval = timedelta(0, int(60*float(config['FIELD_REPORT_INTERVAL'])))
+	fieldClearedInterval = timedelta(0, int(60*float(config['FIELD_CLEARED_INTERVAL'])))
+	lightningInterval = timedelta(0, int(60*float(config['LIGHTNING_REPORT_INTERVAL'])))
+	lightningClearedInterval = timedelta(0, int(60*float(config['LIGHTNING_CLEARED_INTERVAL'])))
 	
 	lastFieldEvent = None
 	lastLightningEvent = None
@@ -270,33 +269,28 @@ def main(args):
 				t = datetime.strptime(t, dateFmt)
 				f, junk = f.split(None, 1)
 				f = float(f)
-				sleep(0.01)
+				#sleep(0.01)
 			except Exception, e:
 				print str(e)
 				break
 
+			movingField[c % avgLimit] = f
+			tempField = numpy.roll(movingField, -(c % avgLimit))
+			dF = tempField[1:4].mean() - tempField[0:3].mean()
+
 			hF = highField(f, config)
 			vF = veryHighField(f, config)
-			try:
-				dF = f-lastField
-			except NameError:
-				dF = 0
 			l,d = lightning(dF, config)
-			lastField = f
 				
 			# Average the field over 20 samples
-			avgField += f
-			avgDField += dF
 			c += 1
 			if c == avgLimit:
-				avgField /= c
-				avgDField /= c
+				avgField = movingField.mean()
+				avgDField = (movingField[1:] - movingField[:-1]).mean()
 				
 				server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime(dateFmt), avgField))
 				server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime(dateFmt), avgDField))
 				
-				avgField = 0.0
-				avgDField = 0.0
 				c = 0
 				
 			# Issue field warnings, if needed
@@ -304,24 +298,26 @@ def main(args):
 			if vF:
 				if lastFieldEvent is None:
 					fieldText = "[%s] WARNING: very high field" % t.strftime(dateFmt)
+					lastFieldEvent = t
 				elif t >= lastFieldEvent + fieldInterval:
 					fieldText = "[%s] WARNING: very high field" % t.strftime(dateFmt)
+					lastFieldEvent = t
 				else:
 					pass
 				
 				fieldHigh = True
-				lastFieldEvent = t
 				
 			elif hF:
 				if lastFieldEvent is None:
 					fieldText = "[%s] WARNING: high field" % t.strftime(dateFmt)
+					lastFieldEvent = t
 				elif t >= lastFieldEvent + fieldInterval:
 					fieldText = "[%s] WARNING: high field" % t.strftime(dateFmt)
+					lastFieldEvent = t
 				else:
 					pass
 				
 				fieldHigh = True
-				lastFieldEvent = t
 				
 			else:
 				if lastFieldEvent is None:
@@ -337,11 +333,13 @@ def main(args):
 			if l:
 				if lastLightningEvent is None:
 					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
+					lastLightningEvent = t
 				elif t >= lastLightningEvent + lightningInterval:
 					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
+					lastLightningEvent = t
 				
 				lightningDetected = True
-				lastLightningEvent = t
+
 			else:
 				if lastLightningEvent is None:
 					pass
@@ -350,7 +348,8 @@ def main(args):
 					lightningDetected = False
 				else:
 					pass
-					
+			
+			# Actually send the message out over UDP
 			if fieldText is not None:
 				print fieldText
 				server.send(fieldText)
