@@ -6,6 +6,11 @@ lightning with the Boltek EFM-100 atmospheric electric field monitor.  This
 software provides a alternative to the Windows-only "EFM-100 Atmospheric 
 Electric Field Monitor V1.18 Software".
 
+This software depends on the following Python modules:
+  * pySerial
+  * pytz
+  * wxPython
+
 Contents
 --------
 emf.c
