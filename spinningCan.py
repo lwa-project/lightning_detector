@@ -329,18 +329,18 @@ def alignDataStream(SerialPort):
 def main(args):
 	config = parseOptions(args)
 	
+	# PID file
+	if config['pidFile'] is not None:
+		fh = open(config['pidFile'], 'w')
+		fh.write("%i\n" % os.getpid())
+		fh.close()
+		
 	# User ID
 	try:
 		os.setuid(config['userID'])
 	except OSError, e:
 		sys.stderr.write("setuid failed: (%d) %s\n" % (e.errno, e.strerror))
 		sys.exit(1)
-	
-	# PID file
-	if config['pidFile'] is not None:
-		fh = open(config['pidFile'], 'w')
-		fh.write("%i\n" % os.getpid())
-		fh.close()
 	
 	# Set the serial port parameters
 	efm100 = serial.Serial()
