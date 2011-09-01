@@ -108,6 +108,9 @@ Usage: spinningCan.py [OPTIONS]
 Options:
 -h, --help                  Display this help information
 -c, --config-file           Path to configuration file
+-p, --pid-file              File to write the current PID to
+-u, --user-id               User ID to run as
+-l, --log-file              File to log warnings/lightning detections to
 -r, --record-to             Record the raw electric field data to a file
 """
 
@@ -120,10 +123,13 @@ Options:
 def parseOptions(args):
 	config = {}
 	config['configFile'] = 'lightning.cfg'
+	config['userID'] = os.getuid()
+	config['pidFile'] = None
+	config['logFile'] = None
 	config['recordFile'] = None
 
 	try:
-		opts, args = getopt.getopt(args, "hc:r:", ["help", "config-file=", "record-to="])
+		opts, args = getopt.getopt(args, "hc:u:p:l=r:", ["help", "config-file=", "user-id=", "pid-file=", "log-file=", "record-to="])
 	except getopt.GetoptError, err:
 		# Print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -135,6 +141,12 @@ def parseOptions(args):
 			usage(exitCode=0)
 		elif opt in ('-c', '--config-file'):
 			config['configFile'] = str(value)
+		elif opt in ('-u' '--user-id'):
+			config['userID'] = int(value)
+		elif opt in ('-p', '--pid-file'):
+			config['pidFile'] = str(value)
+		elif opt in ('-l', '--log-file'):
+			config['logFile'] = str(value)
 		elif opt in('-r', '--record-to'):
 			config['recordFile'] = str(value)
 		else:
@@ -317,6 +329,19 @@ def alignDataStream(SerialPort):
 def main(args):
 	config = parseOptions(args)
 	
+	# User ID
+	try:
+		os.setuid(config['userID'])
+	except OSError, e:
+		sys.stderr.write("setuid failed: (%d) %s\n" % (e.errno, e.strerror))
+		sys.exit(1)
+	
+	# PID file
+	if config['pidFile'] is not None:
+		fh = open(config['pidFile'], 'w')
+		fh.write("%i\n" % os.getpid())
+		fh.close()
+	
 	# Set the serial port parameters
 	efm100 = serial.Serial()
 	efm100.timeout = 0.5
@@ -326,12 +351,19 @@ def main(args):
 	efm100.stopbits = 1
 	efm100.parity = 'N'
 	
+	# Setup the logging option.  If we aren't supposed to log, set `lFH` to
+	# sys.stdout.
+	if config['logFile'] is not None:
+		lFH = open(config['logFile'], 'a')
+	else:
+		lFH = sys.stdout
+	
 	# Setup the recording option.  If we aren't supposed to record, set
-	# `rFH` to None so that we can safely skip over it in the code.
+	# `rFH` to sys.stderr.
 	if config['recordFile'] is not None:
 		rFH = open(config['recordFile'], 'a')
 	else:
-		rFH = None
+		rFH = sys.stderr
 	
 	# Set the field averaging options
 	c = 0
@@ -370,10 +402,11 @@ def main(args):
 				
 				# Parse the string and extract the various bits that we are
 				# interested in using parseField and record it if needed
-				t = datetime.now()
+				t = datetime.utcnow()
 				f, s, v = parseField(text)
-				if rFH is not None and v:
+				if v:
 					rFH.write("%s  %+7.3f kV/m\n" % (t.strftime(dateFmt), f))
+					rFH.flush()
 				
 				movingField[c % avgLimit] = f
 				tempField = numpy.roll(movingField, -(c % avgLimit))[:4]
@@ -459,10 +492,14 @@ def main(args):
 				if fieldText is not None:
 					print fieldText
 					server.send(fieldText)
+					lFH.write("%s\n" % fieldText)
+					lFH.flush()
 					
 				if lightningText is not None:
 					print lightningText
 					server.send(lightningText)
+					lFH.write("%s\n" % lightningText)
+					lFH.flush()
 
 				# Start the next loop.  If we don't get enough characters (because 
 				# the detector has lost power, for instance).  Run the re-alignment

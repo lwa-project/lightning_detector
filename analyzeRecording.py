@@ -10,7 +10,6 @@ from matplotlib import pyplot as plt
 
 # MST7MDT
 UTC = pytz.utc
-MST = pytz.timezone('US/Mountain')
 
 # Date formating string
 dateFmt = "%Y-%m-%d %H:%M:%S.%f"
@@ -27,12 +26,12 @@ while True:
 		t, f = line.split('  ', 1)
 
 		# Convert the time to datetime object (in MST/MDT) and the field to a float
-		t = MST.localize(datetime.strptime(t, dateFmt))
+		t = UTC.localize(datetime.strptime(t, dateFmt))
 		f, junk = f.split(None, 1)
 		f = float(f)
 		
 		# Save
-		times.append(t.astimezone(UTC))
+		times.append(t)
 		fields.append(f)
 
 	except Exception, e:
