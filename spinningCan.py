@@ -123,13 +123,13 @@ Options:
 def parseOptions(args):
 	config = {}
 	config['configFile'] = 'lightning.cfg'
-	config['userID'] = os.getuid()
+	config['userID'] = (os.getuid(), os.getgid())
 	config['pidFile'] = None
 	config['logFile'] = None
 	config['recordFile'] = None
 
 	try:
-		opts, args = getopt.getopt(args, "hc:u:p:l=r:", ["help", "config-file=", "user-id=", "pid-file=", "log-file=", "record-to="])
+		opts, args = getopt.getopt(args, "hc:u:p:l:r:", ["help", "config-file=", "user-id=", "pid-file=", "log-file=", "record-to="])
 	except getopt.GetoptError, err:
 		# Print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -142,7 +142,7 @@ def parseOptions(args):
 		elif opt in ('-c', '--config-file'):
 			config['configFile'] = str(value)
 		elif opt in ('-u' '--user-id'):
-			config['userID'] = int(value)
+			config['userID'] = (int(value.split(':', 1)[0]), int(value.split(':', 1)[1]))
 		elif opt in ('-p', '--pid-file'):
 			config['pidFile'] = str(value)
 		elif opt in ('-l', '--log-file'):
@@ -335,13 +335,6 @@ def main(args):
 		fh.write("%i\n" % os.getpid())
 		fh.close()
 		
-	# User ID
-	try:
-		os.setuid(config['userID'])
-	except OSError, e:
-		sys.stderr.write("setuid failed: (%d) %s\n" % (e.errno, e.strerror))
-		sys.exit(1)
-	
 	# Set the serial port parameters
 	efm100 = serial.Serial()
 	efm100.timeout = 0.5
@@ -354,14 +347,14 @@ def main(args):
 	# Setup the logging option.  If we aren't supposed to log, set `lFH` to
 	# sys.stdout.
 	if config['logFile'] is not None:
-		lFH = open(config['logFile'], 'a')
+		lFH = open(config['logFile'], 'a+')
 	else:
 		lFH = sys.stdout
 	
 	# Setup the recording option.  If we aren't supposed to record, set
 	# `rFH` to sys.stderr.
 	if config['recordFile'] is not None:
-		rFH = open(config['recordFile'], 'a')
+		rFH = open(config['recordFile'], 'a+')
 	else:
 		rFH = sys.stderr
 	
@@ -519,5 +512,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-	daemonize('/dev/null','/dev/null','/dev/null')
+	daemonize('/dev/null','/tmp/stdout','/tmp/stderr')
 	main(sys.argv[1:])

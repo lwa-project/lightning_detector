@@ -37,18 +37,11 @@ unlock_can() {
 	fi
 }
 
-RUNASUSER=steve
-UGID=$(getent passwd $RUNASUSER | cut -f 3,4 -d:) || true
-
 case $1 in
 	start)
 		log_daemon_msg "Starting lightning data server" "spinningCan.py"
-		if [ -z "$UGID" ]; then
-			log_failure_msg "user \"$RUNASUSER\" does not exist"
-			exit
-		fi
 		lock_can
-  		start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -p $PIDFILE -u $UGID $CAN_OPTS
+  		start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -p $PIDFILE $CAN_OPTS
 		status=$?
 		unlock_can
 		log_end_msg $status
