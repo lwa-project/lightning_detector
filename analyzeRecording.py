@@ -48,21 +48,17 @@ for i in xrange(1,len(fields)-1):
 	fields2[i] = (fields[i] + fields[i-1] + fields[i+1]) / 3.0
 fields = fields2
 
-# Differentiation by two methods:  simple and wide
+# Differentiation
 deltas = fields - numpy.roll(fields, 1)
-deltas2 = (numpy.roll(fields, -1) - numpy.roll(fields, 1)) / 2.0
 
 # Plots
 fig = plt.figure()
 ax = fig.gca()
 ax.plot_date(times, fields,  color='blue')
-ax.plot_date(times, deltas,  color='green')
-ax.plot_date(times, deltas2, color='red')
+ax.plot_date(times, deltas,  color='red')
 
 for i in xrange(len(deltas)):
 	if numpy.abs(deltas[i]) > 0.04:
-		ax.vlines(times[i], -20, 20, color='green', linestyle='--')
-	if numpy.abs(deltas2[i]) > 0.04:
 		ax.vlines(times[i], -20, 20, color='red', linestyle='--')
 ax.set_ylim([-20, 20])
 

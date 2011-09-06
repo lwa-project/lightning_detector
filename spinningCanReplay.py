@@ -259,6 +259,7 @@ def main(args):
 
 	# Read from the serial port forever (or at least until a keyboard interrupt has
 	# been sent).
+	print "Replaying file '%s'" % config['args'][0]
 	fh = open(config['args'][0], 'r')
 
 	try:

@@ -109,7 +109,6 @@ Options:
 -h, --help                  Display this help information
 -c, --config-file           Path to configuration file
 -p, --pid-file              File to write the current PID to
--u, --user-id               User ID to run as
 -l, --log-file              File to log warnings/lightning detections to
 -r, --record-to             Record the raw electric field data to a file
 """
@@ -123,13 +122,12 @@ Options:
 def parseOptions(args):
 	config = {}
 	config['configFile'] = 'lightning.cfg'
-	config['userID'] = (os.getuid(), os.getgid())
 	config['pidFile'] = None
 	config['logFile'] = None
 	config['recordFile'] = None
 
 	try:
-		opts, args = getopt.getopt(args, "hc:u:p:l:r:", ["help", "config-file=", "user-id=", "pid-file=", "log-file=", "record-to="])
+		opts, args = getopt.getopt(args, "hc:p:l:r:", ["help", "config-file=", "pid-file=", "log-file=", "record-to="])
 	except getopt.GetoptError, err:
 		# Print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -141,8 +139,6 @@ def parseOptions(args):
 			usage(exitCode=0)
 		elif opt in ('-c', '--config-file'):
 			config['configFile'] = str(value)
-		elif opt in ('-u' '--user-id'):
-			config['userID'] = (int(value.split(':', 1)[0]), int(value.split(':', 1)[1]))
 		elif opt in ('-p', '--pid-file'):
 			config['pidFile'] = str(value)
 		elif opt in ('-l', '--log-file'):
