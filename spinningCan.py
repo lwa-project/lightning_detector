@@ -359,7 +359,7 @@ def main(args):
 				
 				# Send out field and change notices
 				c += 1
-				if c % movingField.nKeep:
+				if c % movingField.nKeep == 0:
 					server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime(dateFmt), movingField.mean()))
 					server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime(dateFmt), movingField.deriv()))
 					
