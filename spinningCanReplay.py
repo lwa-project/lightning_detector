@@ -17,13 +17,10 @@ import serial
 import socket
 import getopt
 import threading
-from time import sleep
+from time import time, sleep
 from datetime import datetime, timedelta
 
-# Electric field and lightning warning levels
-HIGH_FIELD = 5.0
-VERY_HIGH_FIELD = 7.0
-LIGHTNING_MIN_FIELD_CHANGE = 0.05
+from efield import ElectricField
 
 # Electric field string regular expression
 fieldRE = re.compile('\$(?P<field>[-+]\d{2}\.\d{2}),(?P<status>\d)\*(?P<checksum>[0-9A-F]{2})')
@@ -167,44 +164,6 @@ def parseField(text):
 	return field, status, valid
 
 
-def highField(field, config):
-	"""
-	Given an electric field value, compare it against HIGH_FIELD and return True
-	if it *is* a high field.
-	"""
-	
-	if abs(field) > float(config['HIGH_FIELD']):
-		return True
-	else:
-		return False
-
-
-def veryHighField(field, config):
-	"""
-	Given an electric field value, compare it against HIGH_FIELD and return True
-	if it *is* a high field.
-	"""
-	
-	if abs(field) > float(config['VERY_HIGH_FIELD']):
-		return True
-	else:
-		return False
-
-
-def lightning(deltaField, config):
-	"""
-	Given a change in the electric field, compare it with LIGHTNING_MIN_FIELD_CHANGE
-	and see if it could be related to lightning.  If so, calculate a distance using
-	a 10 kV/m field change for lightning at 5 km.
-	"""
-	
-	if abs(deltaField) > float(config['LIGHTNING_MIN_FIELD_CHANGE']):
-		distance = (10.0/abs(deltaField))**(1/3.) * 5
-		return True, distance
-	else:
-		return False, 100.0
-
-
 class dataServer(object):
 	def __init__(self, mcastAddr="224.168.2.9", mcastPort=7163, sendPort=7164):
 		self.sendPort  = sendPort
@@ -234,12 +193,9 @@ class dataServer(object):
 def main(args):
 	config = parseOptions(args)
 	
-	# Set the field averaging options
-	c = 0
-	avgLimit = int(round(float(config['FIELD_AVERAGE'])*20))
-	if avgLimit < 3:
-		avgLimit = 3
-	movingField = numpy.zeros(avgLimit)
+	# Set the field
+	movingField = ElectricField()
+	movingField.updateConfig(config)
 
 	# Start the data server
 	server = dataServer(mcastAddr=config['MCAST_ADDR'], mcastPort=int(config['MCAST_PORT']), 
@@ -263,7 +219,10 @@ def main(args):
 	fh = open(config['args'][0], 'r')
 
 	try:
+		c = 0
 		while True:
+			tStart = time()
+			
 			try:
 				line = fh.readline()
 				t, f = line.split('  ', 1)
@@ -275,28 +234,20 @@ def main(args):
 				print str(e)
 				break
 
-			movingField[c % avgLimit] = f
-			tempField = numpy.roll(movingField, -(c % avgLimit))
-			dF = tempField[1:4].mean() - tempField[0:3].mean()
-
-			hF = highField(f, config)
-			vF = veryHighField(f, config)
-			l,d = lightning(dF, config)
-				
-			# Average the field over 20 samples
+			# Add it to the list
+			movingField.append(t, f)
+			
+			# Send out field and change notices
 			c += 1
-			if c == avgLimit:
-				avgField = movingField.mean()
-				avgDField = (movingField[1:] - movingField[:-1]).mean()
-				
-				server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime(dateFmt), avgField))
-				server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime(dateFmt), avgDField))
+			if c % movingField.nKeep:
+				server.send("[%s] FIELD: %+.3f kV/m" % (t.strftime(dateFmt), movingField.mean()))
+				server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime(dateFmt), movingField.deriv()))
 				
 				c = 0
-				
+			
 			# Issue field warnings, if needed
 			fieldText = None
-			if vF:
+			if movingField.isVeryHigh():
 				if lastFieldEvent is None:
 					fieldText = "[%s] WARNING: very high field" % t.strftime(dateFmt)
 					lastFieldEvent = t
@@ -308,7 +259,7 @@ def main(args):
 				
 				fieldHigh = True
 				
-			elif hF:
+			elif movingField.isHigh():
 				if lastFieldEvent is None:
 					fieldText = "[%s] WARNING: high field" % t.strftime(dateFmt)
 					lastFieldEvent = t
@@ -331,16 +282,16 @@ def main(args):
 			
 			# Issue lightning warnings, if needed
 			lightningText = None
-			if l:
+			if movingField.isLightning():
 				if lastLightningEvent is None:
-					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
+					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), movingField.getLightningDistance())
 					lastLightningEvent = t
 				elif t >= lastLightningEvent + lightningInterval:
-					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), d)
+					lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), movingField.getLightningDistance())
 					lastLightningEvent = t
 				
 				lightningDetected = True
-
+				
 			else:
 				if lastLightningEvent is None:
 					pass
@@ -358,6 +309,8 @@ def main(args):
 			if lightningText is not None:
 				print lightningText
 				server.send(lightningText)
+				
+			print "Done with field work in %.1f ms" % ((time() - tStart)*1000)
 				
 	except KeyboardInterrupt:
 		server.stop()
