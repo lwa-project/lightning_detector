@@ -1,6 +1,19 @@
 # -*- coding: utf-8 -*-
 
+"""
+Module to deal with the messy task of detecting lightning and coming up with a 
+range for it.
+
+Used by spinningCan.py, spinningCanTest.py, spinningCanReplay.py, and 
+analyzeRecodring.py to make sure they are all on the same page.
+"""
+
 import numpy
+
+__version__ = "0.1"
+__revision__ = "$Rev$"
+__all__ = ['ElectricField', '__version__', '__revision__', '__all__']
+
 
 class ElectricField(object):
 	"""
