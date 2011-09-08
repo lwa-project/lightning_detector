@@ -66,11 +66,11 @@ class ElectricField(object):
 			self.nKeep = 7
 		
 		## Field control
-		self.highField = config['HIGH_FIELD'] 
-		self.veryHighField = config['VERY_HIGH_FIELD']
+		self.highField = float(config['HIGH_FIELD'] )
+		self.veryHighField = float(config['VERY_HIGH_FIELD'])
 		
 		## Lightning control
-		self.minFieldChange = config['LIGHTNING_MIN_FIELD_CHANGE']
+		self.minFieldChange = float(config['LIGHTNING_MIN_FIELD_CHANGE'])
 		
 		# Prune
 		self.times = self.times[-self.nKeep:]

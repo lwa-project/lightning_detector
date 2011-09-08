@@ -444,9 +444,12 @@ def main(args):
 	except KeyboardInterrupt:
 		efm100.close()
 		server.stop()
-		
-		if rFH is not None:
+
+		try:
 			rFH.close()
+			lFH.close()
+		except:
+			pass
 		
 		print ''
 
