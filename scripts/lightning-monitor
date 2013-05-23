@@ -1,0 +1,73 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:        lightning-monitor
+# Required-Start:  spinning-can
+# Required-Stop:   none
+# Default-Start:   2 3 4 5
+# Default-Stop:    1
+# Short-Description: Start the lightning monitor
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+DAEMON=/lwa/LightningDetector/scripts/sendLightningEmail.py
+PIDFILE=/var/run/lightningMonitor.pid
+
+#test -x $DAEMON || exit 5
+
+CAN_OPTS=""
+
+LOCKFILE=/var/lock/lightningMonitor
+
+lock_can() {
+	if [ -x /usr/bin/lockfile-create ]; then
+		lockfile-create $LOCKFILE
+		lockfile-touch $LOCKFILE &
+		LOCKTOUCHPID="$!"
+	fi
+}
+
+unlock_can() {
+	if [ -x /usr/bin/lockfile-create ] ; then
+		kill $LOCKTOUCHPID
+		lockfile-remove $LOCKFILE
+	fi
+}
+
+case $1 in
+	start)
+		log_daemon_msg "Starting lightning monitor" "sendLightningEmail.py"
+		lock_can
+  		start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -p $PIDFILE $CAN_OPTS
+		status=$?
+		unlock_can
+		log_end_msg $status
+  		;;
+	stop)
+		log_daemon_msg "Stopping lightning monitor" "sendLightningEmail.py"
+  		start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+		log_end_msg $?
+		rm -f $PIDFILE
+  		;;
+	restart|force-reload)
+		$0 stop && sleep 2 && $0 start
+  		;;
+	try-restart)
+		if $0 status >/dev/null; then
+			$0 restart
+		else
+			exit 0
+		fi
+		;;
+	reload)
+		exit 3
+		;;
+	status)
+		status_of_proc $DAEMON "lightning monitor"
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|try-restart|force-reload|status}"
+		exit 2
+		;;
+esac

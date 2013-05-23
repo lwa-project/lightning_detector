@@ -90,7 +90,7 @@ int main() {
 	t = time(NULL);
 	printf("Started at %s", asctime(localtime(&t)));
 	
-	fd = readyPort("/dev/ttyS0");
+	fd = readyPort("/dev/ttyUSB0");
 	printf("Port ready\n");
 	alignDataStream(fd);
 	printf("Data aligned\n");
