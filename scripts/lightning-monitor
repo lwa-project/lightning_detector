@@ -39,7 +39,7 @@ case $1 in
 	start)
 		log_daemon_msg "Starting lightning monitor" "sendLightningEmail.py"
 		lock_can
-  		start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -p $PIDFILE $CAN_OPTS
+  		start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -i $PIDFILE $CAN_OPTS
 		status=$?
 		unlock_can
 		log_end_msg $status
