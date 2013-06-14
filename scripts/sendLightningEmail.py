@@ -168,10 +168,10 @@ def sendEmail(subject, message, debug=False):
 	msg = MIMEText(message)
 	msg['Subject'] = subject
 	msg['From'] = FROM
-	msg['To'] = ','.join(to)
+	msg['To'] = ','.join(TO)
 	
 	try:
-		server = smtplib.SMTP_SSL('smtp.gmail.com', 587)
+		server = smtplib.SMTP('smtp.gmail.com', 587)
 		if debug:
 			server.set_debuglevel(1)
 		server.starttls()
