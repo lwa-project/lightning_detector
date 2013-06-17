@@ -11,6 +11,7 @@ $LastChangedDate$
 
 import os
 import sys
+import pytz
 import time
 import getopt
 import socket
@@ -31,6 +32,10 @@ TO = ['lwa1ops@phys.unm.edu',]
 # SMTP user and password
 FROM = 'lwa.station.1@gmail.com'
 PASS = '1mJy4LWA'
+
+# Timezones
+UTC = pytz.utc
+MST = pytz.timezone('US/Mountain')
 
 
 """
@@ -100,10 +105,10 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
 
 
 def usage(exitCode=None):
-	print """emailWarning.py - Read data from a spinningCan.py lightning data 
+	print """sendLightningEmail.py - Read data from a spinningCan.py lightning data 
 server and send out an e-mail if too many strikes happen too close to the site.
 
-Usage: emailWarnings.py [OPTIONS]
+Usage: sendLightningEmail.py [OPTIONS]
 
 Options:
 -h, --help                  Display this help information
@@ -189,10 +194,16 @@ def sendWarning(limit, strikeList):
 	Send a `lightning in the vicinity` warnings.
 	"""
 	
-	subject = 'Lightning at LWA-1'
-	message = """At %s local time, Lightning was found in the vicinity of LWA-1 (<= %.1f km).  During the last 10 minutes, 
-%i strikes were seen at distances of %.1f to %.1f km from the station.""" % (str(datetime.now()), limit, len(strikeList), min(strikeList), max(strikeList))
-
+	tNow = datetime.utcnow()
+	tNow = UTC.localize(tNow)
+	tNow = tNow.astimezone(MST)
+	
+	tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")
+	
+	subject = 'Lightning at LWA1'
+	message = """At %s, lightning was found in the vicinity (<= %.1f km) of LWA1.\n\nDuring the last 10 minutes, 
+%i strikes were seen at distances of %.1f to %.1f km from the station.""" % (tNow, limit, len(strikeList), min(strikeList), max(strikeList))
+	
 	return sendEmail(subject, message)
 
 
@@ -201,8 +212,14 @@ def sendClear(limit, clearTime):
 	Send an "all clear" e-mail.
 	"""
 	
-	subject = 'Lightning at LWA-1'
-	message = "At %s, no lightning within %.1f km of LWA-1 has been seen for %i minutes." % (str(datetime.now()), limit, clearTime)
+	tNow = datetime.utcnow()
+	tNow = UTC.localize(tNow)
+	tNow = tNow.astimezone(MST)
+	
+	tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")
+	
+	subject = 'Lightning at LWA1 - All Clear'
+	message = "At %s, no lightning within %.1f km of LWA1 has been seen for %i minutes." % (tNow, limit, clearTime)
 	
 	return sendEmail(subject, message)
 

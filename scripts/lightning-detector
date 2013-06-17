@@ -66,7 +66,7 @@ case $1 in
 		exit 3
 		;;
 	status)
-		status_of_proc $DAEMON "lightning data server"
+		status_of_proc -p $PIDFILE $DAEMON "lightning data server"
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart|try-restart|force-reload|status}"

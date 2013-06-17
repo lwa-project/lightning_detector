@@ -64,7 +64,7 @@ case $1 in
 		exit 3
 		;;
 	status)
-		status_of_proc $DAEMON "lightning monitor"
+		status_of_proc -p $PIDFILE $DAEMON "lightning monitor"
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart|try-restart|force-reload|status}"
