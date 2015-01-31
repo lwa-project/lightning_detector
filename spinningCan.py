@@ -402,7 +402,7 @@ def main(args):
 				
 				# Issue lightning warnings, if needed
 				lightningText = None
-				if movingField.isLightning():
+				if movingField.isLightning() and movingField.isHigh():
 					if lastLightningEvent is None:
 						lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), movingField.getLightningDistance())
 						lastLightningEvent = t
