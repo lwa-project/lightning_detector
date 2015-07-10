@@ -1,0 +1,18 @@
+# Keep three weeks worth of lightning logs
+/lwa/LightningDetector/logs/lightning.log {
+	daily
+        rotate 21
+        compress
+        delaycompress
+        copytruncate
+        ifempty
+}
+
+/lwa/LightningDetector/logs/field.log {
+        daily
+        rotate 21
+        compress
+        delaycompress
+        copytruncate
+        ifempty
+}
