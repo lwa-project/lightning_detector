@@ -16,6 +16,7 @@ import time
 import getopt
 import socket
 import thread
+from socket import gethostname
 
 import smtplib
 from email.mime.text import MIMEText
@@ -25,13 +26,21 @@ from datetime import datetime, timedelta
 
 dataRE = re.compile(r'^\[(?P<date>.*)\] (?P<type>[A-Z]*): (?P<data>.*)$')
 
+# Site
+SITE = gethostname().split('-', 1)[0]
 
 # E-mail Users
 TO = ['lwa1ops@phys.unm.edu',]
 
 # SMTP user and password
-FROM = 'lwa.station.1@gmail.com'
-PASS = '1mJy4LWA'
+if SITE == 'lwa1':
+	FROM = 'lwa.station.1@gmail.com'
+	PASS = '1mJy4LWA'
+elif SITE == 'lwasv':
+	FROM = 'lwa.station.sv@gmail.com'
+	PASS = '1mJy4LWA'
+else:
+	raise RuntimeError("Unknown site '%s'" % SITE)
 
 # Timezones
 UTC = pytz.utc
@@ -200,9 +209,9 @@ def sendWarning(limit, strikeList):
 	
 	tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")
 	
-	subject = 'Lightning at LWA1'
-	message = """At %s, lightning was found in the vicinity (<= %.1f km) of LWA1.\n\nDuring the last 10 minutes, 
-%i strikes were seen at distances of %.1f to %.1f km from the station.""" % (tNow, limit, len(strikeList), min(strikeList), max(strikeList))
+	subject = '%s - Lightning in Area' % (SITE.upper(),)
+	message = """At %s lightning was found in the vicinity (<= %.1f km) of %s.\n\nDuring the last 10 minutes, 
+%i strikes were seen at distances of %.1f to %.1f km from the station.""" % (tNow, limit, SITE.upper(), len(strikeList), min(strikeList), max(strikeList))
 	
 	return sendEmail(subject, message)
 
@@ -218,8 +227,8 @@ def sendClear(limit, clearTime):
 	
 	tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")
 	
-	subject = 'Lightning at LWA1 - All Clear'
-	message = "At %s, no lightning within %.1f km of LWA1 has been seen for %i minutes." % (tNow, limit, clearTime)
+	subject = '%s - Lightning in Area - Cleared' % (SITE.upper(),)
+	message = "At %s no lightning within %.1f km of %s has been seen for %i minutes." % (tNow, limit, SITE.upper(), clearTime)
 	
 	return sendEmail(subject, message)
 
