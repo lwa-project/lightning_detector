@@ -291,8 +291,7 @@ class EFM100(wx.Frame):
 		Called on application shutdown.
 		"""
 		
-		self.StopThread()               #stop reader thread
-		self.serial.close()             #cleanup
+		self.stopThread()               #stop reader thread
 		self.Destroy()                  #close windows, exit app
 
 	def onSaveAs(self, event):

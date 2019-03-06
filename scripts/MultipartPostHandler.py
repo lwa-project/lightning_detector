@@ -42,7 +42,7 @@ Further Example:
 import urllib
 import urllib2
 import mimetools, mimetypes
-import os, stat
+import os, sys, stat
 from StringIO import StringIO
 class Callable:
     def __init__(self, anycallable):
@@ -82,7 +82,7 @@ class MultipartPostHandler(urllib2.BaseHandler):
             request.add_data(data)
         return request
 
-    def multipart_encode(vars, files, boundary = None, buffer = None):
+    def multipart_encode(self, vars, files, boundary = None, buffer = None):
         if boundary is None:
             boundary = mimetools.choose_boundary()
         if buffer is None:
