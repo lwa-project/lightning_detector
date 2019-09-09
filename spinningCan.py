@@ -10,6 +10,8 @@ $LastChangedBy$
 $LastChangedDate$
 """
 
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -135,7 +137,7 @@ def parseConfigFile(filename):
             keyword, value = line.split(None, 1)
             config[keyword] = value
     except Exception as err:
-        print "WARNING:  could not parse configuration file '%s': %s" % (filename, str(err))
+        print("WARNING:  could not parse configuration file '%s': %s" % (filename, str(err)))
 
     return config
 
@@ -363,13 +365,13 @@ def main(args):
                         
                 # Actually send the message out over UDP
                 if fieldText is not None:
-                    print fieldText
+                    print(fieldText)
                     server.send(fieldText)
                     lFH.write("%s\n" % fieldText)
                     lFH.flush()
                     
                 if lightningText is not None:
-                    print lightningText
+                    print(lightningText)
                     server.send(lightningText)
                     lFH.write("%s\n" % lightningText)
                     lFH.flush()
@@ -391,7 +393,7 @@ def main(args):
         except:
             pass
         
-        print ''
+        print('')
 
 
 if __name__ == "__main__":

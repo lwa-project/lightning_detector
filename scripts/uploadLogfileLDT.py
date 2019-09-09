@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import os
 import sys
 import time
@@ -17,6 +19,6 @@ TYPE = "SSLOG"
 p = urllib2.build_opener(MultipartPostHandler.MultipartPostHandler())
 r = os.path.realpath(sys.argv[1])
 f = p.open(URL, data={'key': KEY, 'site': SITE, 'type': TYPE, 'subsystem': 'LDT', 'file': open(r)})
-print f.read()
+print(f.read())
 f.close()
 

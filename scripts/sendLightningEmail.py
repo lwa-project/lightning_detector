@@ -9,6 +9,8 @@ $LastChangedBy$
 $LastChangedDate$
 """
 
+from __future__ import print_function
+
 import os
 import sys
 import pytz
@@ -137,7 +139,7 @@ def sendEmail(subject, message, debug=False):
         server.close()
         return True
     except Exception, e:
-        print str(e)
+        print(str(e))
         return False
 
 
@@ -254,7 +256,7 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, distance_limit=15.0, rate_li
                 
     except KeyboardInterrupt:
         sock.close()
-        print ''
+        print('')
 
 
 if __name__ == "__main__":

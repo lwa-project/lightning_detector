@@ -10,6 +10,8 @@ $LastChangedBy$
 $LastChangedDate$
 """
 
+from __future__ import print_function
+
 import re
 import sys
 import numpy
@@ -65,7 +67,7 @@ def parseConfigFile(filename):
             keyword, value = line.split(None, 1)
             config[keyword] = value
     except Exception as err:
-        print "WARNING:  could not parse configuration file '%s': %s" % (filename, str(err))
+        print("WARNING:  could not parse configuration file '%s': %s" % (filename, str(err)))
 
     return config
 
@@ -163,7 +165,7 @@ def main(args):
 
     # Read from the serial port forever (or at least until a keyboard interrupt has
     # been sent).
-    print "Replaying file '%s'" % args.filename
+    print("Replaying file '%s'" % args.filename)
     fh = open(args.filename, 'r')
 
     try:
@@ -179,7 +181,7 @@ def main(args):
                 f = float(f)
                 #sleep(0.01)
             except Exception, e:
-                print str(e)
+                print(str(e))
                 break
 
             # Add it to the list
@@ -251,18 +253,18 @@ def main(args):
             
             # Actually send the message out over UDP
             if fieldText is not None:
-                print fieldText
+                print(fieldText)
                 server.send(fieldText)
                 
             if lightningText is not None:
-                print lightningText
+                print(lightningText)
                 server.send(lightningText)
                 
-            print "Done with field work in %.1f ms" % ((time() - tStart)*1000)
+            print("Done with field work in %.1f ms" % ((time() - tStart)*1000))
                 
     except KeyboardInterrupt:
         server.stop()
-        print ''
+        print('')
 
     fh.close()
 

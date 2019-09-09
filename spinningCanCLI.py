@@ -9,6 +9,8 @@ $LastChangedBy$
 $LastChangedDate$
 """
 
+from __future__ import print_function
+
 import sys
 import time
 import socket
@@ -48,18 +50,18 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, print_field=False, print_war
 
                 mtch = dataRE.match(data)
                 if print_field and (mtch.group('type') in ['FIELD', 'DELTA']):
-                    print data
+                    print(data)
                 if print_warning and mtch.group('type') in ['WARNING',]:
-                    print data
+                    print(data)
                 if mtch.group('type') in ['LIGHTNING', 'NOTICE']:
-                    print data
+                    print(data)
 
             except socket.error, e:
                 pass
                 
     except KeyboardInterrupt:
         sock.close()
-        print ''
+        print('')
 
 
 if __name__ == "__main__":
