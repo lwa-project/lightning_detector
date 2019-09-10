@@ -243,8 +243,8 @@ def main(args):
     
     # Setup the logging option.  If we aren't supposed to log, set `lFH` to
     # sys.stdout.
-    if args.log is not None:
-        lFH = open(args.log, 'a+')
+    if args.log_file is not None:
+        lFH = open(args.log_file, 'a+')
     else:
         lFH = sys.stdout
     
