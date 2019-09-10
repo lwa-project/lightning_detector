@@ -16,8 +16,8 @@ import sys
 import pytz
 import time
 import socket
-import thread
 import argparse
+import threading
 from socket import gethostname
 
 import smtplib
@@ -241,14 +241,16 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, distance_limit=15.0, rate_li
                     # Notify the users by e-mail and set the "close lightning"
                     # flag
                     if len(l) > rate_limit and not isClose:
-                        thread.start_new_thread(sendWarning, (distance_limit, l))
+                        op = threading.Thread(target=sendWarning, args=(distance_limit, l))
+                        op.start()
                         isClose = True
                 else:
                     # If the dictionary is empty and we were previously under
                     # lightning conditions, send the "all clear" and clear the
                     # "close lighthing" flag
                     if isClose:
-                        thread.start_new_thread(sendClear, (distance_limit, 30))
+                        op = threading.Thread(target=sendClear, args=(distance_limit, 30))
+                        op.start()
                         isClose = False
 
             except socket.error as e:
