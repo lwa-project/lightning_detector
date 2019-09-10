@@ -86,7 +86,7 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         pid = os.fork()
         if pid > 0:
             sys.exit(0) # Exit first parent.
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("fork #1 failed: (%d) %s\n" % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -100,7 +100,7 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         pid = os.fork()
         if pid > 0:
             sys.exit(0) # Exit second parent.
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("fork #2 failed: (%d) %s\n" % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -138,7 +138,7 @@ def sendEmail(subject, message, debug=False):
         server.sendmail(FROM, TO, msg.as_string())
         server.close()
         return True
-    except Exception, e:
+    except Exception as e:
         print(str(e))
         return False
 
@@ -251,7 +251,7 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, distance_limit=15.0, rate_li
                         thread.start_new_thread(sendClear, (distance_limit, 30))
                         isClose = False
 
-            except socket.error, e:
+            except socket.error as e:
                 pass
                 
     except KeyboardInterrupt:

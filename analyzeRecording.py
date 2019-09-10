@@ -49,7 +49,7 @@ while True:
             lightning.append(t)
             distances.append( movingField.getLightningDistance() )
 
-    except Exception, e:
+    except Exception as e:
         print("Reading ends with: %s" % str(e))
         break
 fh.close()

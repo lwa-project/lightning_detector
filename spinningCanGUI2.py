@@ -367,7 +367,7 @@ class EFM100(wx.Frame):
                 data, addr = self.sock.recvfrom(1024)
                 event = SocketRxEvent(self.GetId(), data)
                 self.GetEventHandler().AddPendingEvent(event)
-            except socket.error, e:
+            except socket.error as e:
                 pass
 
 

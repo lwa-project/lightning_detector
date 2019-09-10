@@ -180,7 +180,7 @@ def main(args):
                 f, junk = f.split(None, 1)
                 f = float(f)
                 #sleep(0.01)
-            except Exception, e:
+            except Exception as e:
                 print(str(e))
                 break
 

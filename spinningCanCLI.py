@@ -56,7 +56,7 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, print_field=False, print_war
                 if mtch.group('type') in ['LIGHTNING', 'NOTICE']:
                     print(data)
 
-            except socket.error, e:
+            except socket.error as e:
                 pass
                 
     except KeyboardInterrupt:
