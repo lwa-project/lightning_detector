@@ -89,9 +89,9 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     # Now I am a daemon!
 
     # Redirect standard file descriptors.
-    si = file(stdin, 'r')
-    so = file(stdout, 'a+')
-    se = file(stderr, 'a+', 0)
+    si = open(stdin, 'r')
+    so = open(stdout, 'a+')
+    se = open(stderr, 'a+')
     ## Make a time mark
     mark = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
     so.write("===\nLaunched at %s\n===\n" % mark)
