@@ -6,8 +6,8 @@ from __future__ import print_function
 import os
 import sys
 import time
+import requests
 from socket import gethostname
-import urllib, urllib2, MultipartPostHandler 
 
 
 URL = "https://lda10g.alliance.unm.edu/metadata/sorter/index.py"
@@ -16,9 +16,8 @@ SITE = gethostname().split('-', 1)[0]
 TYPE = "SSLOG"
 
 # Send the update to lwalab
-p = urllib2.build_opener(MultipartPostHandler.MultipartPostHandler())
 r = os.path.realpath(sys.argv[1])
-f = p.open(URL, data={'key': KEY, 'site': SITE, 'type': TYPE, 'subsystem': 'LDT', 'file': open(r)})
-print(f.read())
+f = requests.post(URL, data={'key': KEY, 'site': SITE, 'type': TYPE, 'subsystem': 'LDT'}, files={'file': open(r)})
+print(f.text)
 f.close()
 
