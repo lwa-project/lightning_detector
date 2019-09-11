@@ -208,6 +208,10 @@ class dataServer(object):
             self.sock = None
         
     def send(self, data):
+        try:
+            bytes(data, 'ascii')
+        except TypeError:
+            pass
         if self.sock is not None:
             self.sock.sendto(data, (self.mcastAddr, self.mcastPort) )
 
@@ -265,7 +269,7 @@ def main(args):
 
     # Start the data server
     server = dataServer(mcastAddr=args.config_file['MCAST_ADDR'], mcastPort=int(args.config_file['MCAST_PORT']), 
-                sendPort=int(args.config_file['SEND_PORT']))
+                        sendPort=int(args.config_file['SEND_PORT']))
     server.start()
 
     # Set the warning suppression interval
@@ -278,14 +282,19 @@ def main(args):
     
     lastFieldEvent = None
     lastLightningEvent = None
-
+    
     # Read from the serial port forever (or at least until a keyboard interrupt has
     # been sent).
     try:
         c = 0
         while True:
             if text:
-                text = text + efm100.read(13)
+                new_text = efm100.read(13)
+                try:
+                    new_text = new_text.decode('ascii')
+                except AttributeError:
+                    pass
+                text = text + new_text.replace('\x00', '')
                 text = text.replace('\r\n', '\n')
                 
                 # Parse the string and extract the various bits that we are
@@ -295,7 +304,7 @@ def main(args):
                 if v:
                     rFH.write("%s  %+7.3f kV/m\n" % (t.strftime(dateFmt), f))
                     rFH.flush()
-                
+                    
                 # Add it to the list
                 movingField.append(t, f)
                 
@@ -306,7 +315,7 @@ def main(args):
                     server.send("[%s] DELTA: %+.3f kV/m" % (t.strftime(dateFmt), movingField.deriv()))
                     
                     c = 0
-                
+                    
                 # Issue field warnings, if needed
                 fieldText = None
                 if movingField.isVeryHigh():
@@ -318,7 +327,7 @@ def main(args):
                         lastFieldEvent = t
                     else:
                         pass
-                    
+                        
                     fieldHigh = True
                     
                 elif movingField.isHigh():
@@ -330,7 +339,7 @@ def main(args):
                         lastFieldEvent = t
                     else:
                         pass
-                    
+                        
                     fieldHigh = True
                     
                 else:
@@ -341,7 +350,7 @@ def main(args):
                         fieldHigh = False
                     else:
                         pass
-                
+                        
                 # Issue lightning warnings, if needed
                 lightningText = None
                 if movingField.isLightning() and movingField.isHigh():
@@ -351,7 +360,7 @@ def main(args):
                     elif t >= lastLightningEvent + lightningInterval:
                         lightningText = "[%s] LIGHTNING: %.1f km" % (t.strftime(dateFmt), movingField.getLightningDistance())
                         lastLightningEvent = t
-                    
+                        
                     lightningDetected = True
                     
                 else:
@@ -375,24 +384,24 @@ def main(args):
                     server.send(lightningText)
                     lFH.write("%s\n" % lightningText)
                     lFH.flush()
-
+                    
                 # Start the next loop.  If we don't get enough characters (because 
                 # the detector has lost power, for instance).  Run the re-alignment
                 # function again to try to get the stream back.
                 text = efm100.read(1)
                 if len(text) < 1:
                     text = alignDataStream(efm100)
-                
+                    
     except KeyboardInterrupt:
         efm100.close()
         server.stop()
-
+        
         try:
             rFH.close()
             lFH.close()
         except:
             pass
-        
+            
         print('')
 
 

@@ -183,4 +183,3 @@ class ElectricField(object):
             return dist*0.621371192
         else:
             return dist
-    

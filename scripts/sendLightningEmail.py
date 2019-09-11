@@ -203,13 +203,13 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, distance_limit=15.0, rate_li
     
     # Setup lightning control variable
     isClose = False
-
+    
     # Main reading loop
     try:
         while True:
             try:
                 data, addr = sock.recvfrom(1024)
-
+                
                 # RegEx matching for message date, type, and content
                 try:
                     data = data.decode('ascii')
@@ -223,16 +223,16 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, distance_limit=15.0, rate_li
                 if mtch.group('type') == 'LIGHTNING':
                     dist, junk = mtch.group('data').split(None, 1)
                     dist = float(dist)
-
+                    
                     if dist <= distance_limit:
                         strikes[t] = dist
-                
+                        
                 # Cull the list of old (>30 minutes) strikes
                 pruneTime = t
                 for k in strikes.keys():
                     if pruneTime - k > timedelta(0, 1800):
                         del strikes[k]
-                
+                        
                 # If there are any strikes left in the list, see if we
                 # are in a "close lighthing" condition (more than rate_limit
                 # strikes in the last 10 minutes).
@@ -241,7 +241,7 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, distance_limit=15.0, rate_li
                     for k in strikes.keys():
                         if pruneTime - k < timedelta(0, 600):
                             l.append(strikes[k])
-                    
+                            
                     # Notify the users by e-mail and set the "close lightning"
                     # flag
                     if len(l) > rate_limit and not isClose:
@@ -256,7 +256,7 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, distance_limit=15.0, rate_li
                         op = threading.Thread(target=sendClear, args=(distance_limit, 30))
                         op.start()
                         isClose = False
-
+                        
             except socket.error as e:
                 pass
                 
