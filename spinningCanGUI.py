@@ -282,6 +282,10 @@ class EFM100(wx.Frame):
         
         text = event.data
         
+        try:
+            text = text.decode('ascii')
+        except AttributeError:
+            pass
         mtch = dataRE.match(text)
         t = datetime.strptime(mtch.group('date'), "%Y-%m-%d %H:%M:%S.%f")
         if mtch.group('type') == 'FIELD':
