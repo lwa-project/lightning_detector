@@ -17,7 +17,9 @@ TYPE = "SSLOG"
 
 # Send the update to lwalab
 r = os.path.realpath(sys.argv[1])
-f = requests.post(URL, data={'key': KEY, 'site': SITE, 'type': TYPE, 'subsystem': 'LDT'}, files={'file': open(r)})
+f = requests.post(URL,
+                  data={'key': KEY, 'site': SITE, 'type': TYPE, 'subsystem': 'LDT'},
+                  files={'file': open(r, 'rb')})
 print(f.text)
 f.close()
 
