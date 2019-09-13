@@ -209,7 +209,7 @@ class dataServer(object):
         
     def send(self, data):
         try:
-            bytes(data, 'ascii')
+            data = bytes(data, 'ascii')
         except TypeError:
             pass
         if self.sock is not None:
@@ -223,9 +223,21 @@ def alignDataStream(SerialPort):
     """
     
     text = SerialPort.read(1)
+    try:
+        text = text.decode('ascii')
+    except AttributeError:
+        pass
+    except UnicodeDecodeError:
+        text = ''
     while text != '$':
         text = SerialPort.read(1)
-        
+        try:
+            text = text.decode('ascii')
+        except AttributeError:
+            pass
+        except UnicodeDecodeError:
+            text = ''
+            
     return text
 
 
@@ -266,7 +278,13 @@ def main(args):
     # Open the port and find the start of the data stream
     efm100.open()
     text = alignDataStream(efm100)
-
+    try:
+        text = text.decode('ascii')
+    except AttributeError:
+        pass
+    except UnicodeDecodeError:
+        text = ''
+        
     # Start the data server
     server = dataServer(mcastAddr=args.config_file['MCAST_ADDR'], mcastPort=int(args.config_file['MCAST_PORT']), 
                         sendPort=int(args.config_file['SEND_PORT']))
@@ -391,6 +409,12 @@ def main(args):
                 text = efm100.read(1)
                 if len(text) < 1:
                     text = alignDataStream(efm100)
+                try:
+                    text = text.decode('ascii')
+                except AttributeError:
+                    pass
+                except UnicodeDecodeError:
+                    text = ''
                     
     except KeyboardInterrupt:
         efm100.close()

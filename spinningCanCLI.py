@@ -48,11 +48,11 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163, print_field=False, print_war
             try:
                 data, addr = sock.recvfrom(1024)
 
-                mtch = dataRE.match(data)
                 try:
                     data = data.decode('ascii')
                 except AttributeError:
                     pass
+                mtch = dataRE.match(data)
                 if print_field and (mtch.group('type') in ['FIELD', 'DELTA']):
                     print(data)
                 if print_warning and mtch.group('type') in ['WARNING',]:
