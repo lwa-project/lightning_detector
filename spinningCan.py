@@ -4,10 +4,6 @@
 """
 spinningCan.py - Python script for reading in serial port data from a Boltek EFM-100 
 atmospheric electric field monitor and printing out the electric field and it change.
-
-$Rev$
-$LastChangedBy$
-$LastChangedDate$
 """
 
 from __future__ import print_function

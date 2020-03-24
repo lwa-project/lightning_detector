@@ -3,10 +3,6 @@
 
 """
 Graphical interface to the lightning data served up by spinningCan.py.
-
-$Rev$
-$LastChangedBy$
-$LastChangedDate$
 """
 
 import sys

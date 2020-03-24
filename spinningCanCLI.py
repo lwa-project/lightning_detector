@@ -3,10 +3,6 @@
 
 """
 Command line interface to the lightning data served up by spinningCan.py.
-
-$Rev$
-$LastChangedBy$
-$LastChangedDate$
 """
 
 from __future__ import print_function

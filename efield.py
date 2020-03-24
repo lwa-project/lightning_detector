@@ -11,8 +11,7 @@ analyzeRecodring.py to make sure they are all on the same page.
 import numpy
 
 __version__ = "0.1"
-__revision__ = "$Rev$"
-__all__ = ['ElectricField', '__version__', '__revision__', '__all__']
+__all__ = ['ElectricField',]
 
 
 class ElectricField(object):

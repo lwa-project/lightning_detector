@@ -1,0 +1,8 @@
+# Log files
+logs
+
+# Python stuff
+*.pyc
+
+# Executables
+efm
