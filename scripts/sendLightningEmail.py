@@ -28,7 +28,7 @@ dataRE = re.compile(r'^\[(?P<date>.*)\] (?P<type>[A-Z]*): (?P<data>.*)$')
 SITE = gethostname().split('-', 1)[0]
 
 # E-mail Users
-TO = ['lwa1ops@phys.unm.edu',]
+TO = ['lwa1ops-l@list.unm.edu',]
 
 # SMTP user and password
 if SITE == 'lwa1':
