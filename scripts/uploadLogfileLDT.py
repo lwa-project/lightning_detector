@@ -10,7 +10,7 @@ import requests
 from socket import gethostname
 
 
-URL = "https://lda10g.alliance.unm.edu/metadata/sorter/index.py"
+URL = "https://lda10g.unm.edu/metadata/sorter/index.py"
 KEY = "c0843461abe746a4608dd9c897f9b261"
 SITE = gethostname().split('-', 1)[0]
 TYPE = "SSLOG"
