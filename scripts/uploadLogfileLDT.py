@@ -19,7 +19,7 @@ TYPE = "SSLOG"
 r = os.path.realpath(sys.argv[1])
 f = requests.post(URL,
                   data={'key': KEY, 'site': SITE, 'type': TYPE, 'subsystem': 'LDT'},
-                  files={'file': open(r, 'rb')})
+                  files={'file': open(r, 'rb')},
+                  verify=False) # We don't have a certiticate for lda10g.unm.edu
 print(f.text)
 f.close()
-
