@@ -33,10 +33,10 @@ TO = ['lwa1ops-l@list.unm.edu',]
 # SMTP user and password
 if SITE == 'lwa1':
     FROM = 'lwa.station.1@gmail.com'
-    PASS = '1mJy4LWA'
+    PASS = 'rzsxktfuudvfeqsv'
 elif SITE == 'lwasv':
     FROM = 'lwa.station.sv@gmail.com'
-    PASS = '1mJy4LWA'
+    PASS = 'xuyqpylcarzfyrlo'
 else:
     raise RuntimeError("Unknown site '%s'" % SITE)
 
