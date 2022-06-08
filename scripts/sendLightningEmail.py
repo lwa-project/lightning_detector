@@ -29,6 +29,7 @@ SITE = gethostname().split('-', 1)[0]
 
 # E-mail Users
 TO = ['lwa1ops-l@list.unm.edu',]
+CC = []
 
 # SMTP user and password
 if SITE == 'lwa1':
@@ -37,6 +38,7 @@ if SITE == 'lwa1':
 elif SITE == 'lwasv':
     FROM = 'lwa.station.sv@gmail.com'
     PASS = 'xuyqpylcarzfyrlo'
+    CC.append('jntille@sandia.gov')
 else:
     raise RuntimeError("Unknown site '%s'" % SITE)
 
@@ -120,18 +122,24 @@ def sendEmail(subject, message, debug=False):
     Send an e-mail via the LWA1 operator list
     """
     
+    rcpt = []
     msg = MIMEText(message)
     msg['Subject'] = subject
     msg['From'] = FROM
     msg['To'] = ','.join(TO)
     
+    rcpt.extend(TO)
+    if len(CC):
+        msg['Cc'] = ','.join(CC)
+        rcpt.extend(CC)
+        
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         if debug:
             server.set_debuglevel(1)
         server.starttls()
         server.login(FROM, PASS)
-        server.sendmail(FROM, TO, msg.as_string())
+        server.sendmail(FROM, rcpt, msg.as_string())
         server.close()
         return True
     except Exception as e:
