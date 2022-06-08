@@ -39,6 +39,9 @@ elif SITE == 'lwasv':
     FROM = 'lwa.station.sv@gmail.com'
     PASS = 'xuyqpylcarzfyrlo'
     CC.append('jntille@sandia.gov')
+elif SITE == 'lwana':
+    FROM = 'lwa.station.na@gmail.com'
+    PASS = 'xsphaddgntptmgqm'
 else:
     raise RuntimeError("Unknown site '%s'" % SITE)
 
