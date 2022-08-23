@@ -71,14 +71,14 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163):
                     client_socket, address = server.accept()
                     connections.append(client_socket)
                     addresses.append(address)
-                    print("Connection from", address)
+                    print("Accepted new connection from %s, port %i" % address)
             for s in writable:
                 try:
                     if data is not None:
                         s.send(data)
                 except socket.error as e:
                     idx = connections.index(s)
-                    print("Connection closed to", addresses[idx])
+                    print("Closed connection to %s, port %i" % addresses[idx])
                     s.close()
                     del connections[idx]
                     del addresses[idx]
