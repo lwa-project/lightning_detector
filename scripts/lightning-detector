@@ -16,7 +16,7 @@ PIDFILE=/var/run/spinningCan.pid
 
 #test -x $DAEMON || exit 5
 
-CAN_OPTS="-c /lwa/LightningDetector/lightning.cfg \
+CAN_OPTS="-c /lwa/LightningDetector/lightning.json \
 -l  /lwa/LightningDetector/logs/lightning.log \
 -r /lwa/LightningDetector/logs/field.log"
 

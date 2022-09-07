@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 Module to deal with the messy task of detecting lightning and coming up with a 
@@ -10,7 +9,7 @@ analyzeRecodring.py to make sure they are all on the same page.
 
 import numpy
 
-__version__ = "0.1"
+__version__ = "0.2"
 __all__ = ['ElectricField',]
 
 
@@ -47,11 +46,11 @@ class ElectricField(object):
         Update the current configuration using a dictionary of values.  
         Values looked for are:
         
-          * FIELD_AVERAGE - number of seconds to keep and average the
+          * average_time - number of seconds to keep and average the
             electric field
-          * HIGH_FIELD - field value in kV/m for a high field
-          * VERY_HIGH_FIELD - field value in kV/m for a very high field
-          * LIGHTNING_MIN_FIELD_CHANGE - minimum field change over 
+          * high_field - field value in kV/m for a high field
+          * very_high_field - field value in kV/m for a very high field
+          * min_efield_change - minimum field change over 
             ~0.3 s to count as lightning.
             
         All dictionary keys are taken to be upper-cased and are case 
@@ -60,16 +59,16 @@ class ElectricField(object):
         
         # Update values
         ## Data retention
-        self.nKeep = int(round(20.0*float(config['FIELD_AVERAGE'])))
+        self.nKeep = int(round(20.0*float(config['efield']['average_time'])))
         if self.nKeep < 7:
             self.nKeep = 7
         
         ## Field control
-        self.highField = float(config['HIGH_FIELD'] )
-        self.veryHighField = float(config['VERY_HIGH_FIELD'])
+        self.highField = float(config['efield']['high_field'] )
+        self.veryHighField = float(config['very_high_field'])
         
         ## Lightning control
-        self.minFieldChange = float(config['LIGHTNING_MIN_FIELD_CHANGE'])
+        self.minFieldChange = float(config['lightning']['min_efield_change'])
         
         # Prune
         self.times = self.times[-self.nKeep:]
