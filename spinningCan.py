@@ -17,6 +17,7 @@ import serial
 import socket
 import argparse
 import threading
+import json_minify
 from datetime import datetime, timedelta
 
 from efield import ElectricField
@@ -404,7 +405,7 @@ if __name__ == "__main__":
     
     # Parse the configuration file
     with open(args.config_file, 'r') as ch:
-        args.config_file = json.loads(ch.read())
+        args.config_file = json.loads(json_minify.json_minify(ch.read()))
         
     if not args.foreground:
         daemonize('/dev/null','/tmp/sc-stdout','/tmp/sc-stderr')

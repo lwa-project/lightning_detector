@@ -1,22 +1,26 @@
 {
-  "serial_port": "/dev/ttyUSB0",
+  /* Serial port to use */
+  "serial_port": "/dev/boltek",
   
+  /* Multicast configuration */
   "multicast": {
     "ip": "224.168.2.9",
     "port": 7163
   },
   
+  /* Electric field limits */
   "efield": {
-    "average_time": 1.0,
-    "high_field": 5.0,
-    "very_high_field": 7.0,
-    "report_interval": 1.0,
-    "cleared_interval": 1.0
+    "average_time": 1.0,      // seconds
+    "high_field": 5.0,        // kV/m
+    "very_high_field": 7.0,   // kV/m
+    "report_interval": 1.0,   // minutes
+    "cleared_interval": 1.0   // minutes
   },
   
+  /* Lightning limits */
   "lightning": {
-    "min_efield_change": 0.05,
-    "report_interval": 0.0333,
-    "cleared_interval": 2.0
+    "min_efield_change": 0.05,  // kV/m
+    "report_interval": 0.0333,  // minutes
+    "cleared_interval": 2.0     // minutes
   }
 }

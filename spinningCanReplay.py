@@ -16,6 +16,7 @@ import serial
 import socket
 import argparse
 import threading
+import json_minify
 from time import time, sleep
 from datetime import datetime, timedelta
 
@@ -238,7 +239,7 @@ if __name__ == "__main__":
     
     # Parse the configuration file
     with open(args.config_file, 'r') as ch:
-        args.config_file = json.loads(ch.read())
+        args.config_file = json.loads(json_minify.json_minify(ch.read()))
         
     main(args)
     
