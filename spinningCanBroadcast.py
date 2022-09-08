@@ -53,13 +53,16 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163):
     connections, addresses = [], []
     
     # Main reading loop
+    tlast = datetime.utcnow()
     try:
         while True:
             try:
                 data, addr = sock.recvfrom(1024)
+                tlast = datetime.utcnow()
             except socket.error as e:
                 t = datetime.utcnow()
-                data = "[%s] NODATA: No data received after %.1f s" % (t.strftime(dateFmt), timeout)
+                age = t - tlast
+                data = "[%s] NODATA: No data received after %.1f s" % (t.strftime(dateFmt), age.total_seconds())
                 try:
                     data = data.encode()
                 except AttributeError:
