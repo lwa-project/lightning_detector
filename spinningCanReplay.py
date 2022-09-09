@@ -106,7 +106,7 @@ def main(args):
 
     # Start the data server
     server = dataServer(mcastAddr=args.config_file['multicast']['ip'], mcastPort=int(args.config_file['multicast']['port']), 
-                sendPort=int(args.config_file['multicast']['port']))
+                sendPort=int(args.config_file['multicast']['port'])+1)
     server.start()
 
     # Set the warning suppression interval
