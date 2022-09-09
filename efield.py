@@ -65,7 +65,7 @@ class ElectricField(object):
         
         ## Field control
         self.highField = float(config['efield']['high_field'] )
-        self.veryHighField = float(config['very_high_field'])
+        self.veryHighField = float(config['efield']['very_high_field'])
         
         ## Lightning control
         self.minFieldChange = float(config['lightning']['min_efield_change'])
