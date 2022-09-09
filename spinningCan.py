@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """
 spinningCan.py - Python script for reading in serial port data from a Boltek EFM-100 
 atmospheric electric field monitor and printing out the electric field and it change.
 """
-
-from __future__ import print_function
 
 import os
 import re
