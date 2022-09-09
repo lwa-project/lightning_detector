@@ -11,11 +11,13 @@ from __future__ import print_function
 import os
 import re
 import sys
+import json
 import numpy
 import serial
 import socket
 import argparse
 import threading
+import json_minify
 from datetime import datetime, timedelta
 
 from efield import ElectricField
@@ -95,47 +97,6 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     os.dup2(si.fileno(), sys.stdin.fileno())
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
-
-
-def parseConfigFile(filename):
-    """
-    Given the name of a configuration file, parse it and return a dictionary of
-    the configuration parameters.  If the file doesn't exist or can't be opened,
-    return the default values.
-    """
-
-    config = {}
-
-    config['SERIAL_PORT'] = "/dev/ttyS0"
-    config['MCAST_ADDR']  = "224.168.2.9"
-    config['MCAST_PORT']  = 7163
-    config['SEND_PORT']   = 7164
-    
-    config['FIELD_AVERAGE']          = 1.0
-    config['HIGH_FIELD']             = 5.0
-    config['VERY_HIGH_FIELD']        = 7.0
-    config['FIELD_REPORT_INTERVAL']  = 1.0
-    config['FIELD_CLEARED_INTERVAL'] = 1.0
-
-    config['LIGHTNING_MIN_FIELD_CHANGE'] = 0.05
-    config['LIGHTNING_REPORT_INTERVAL']  = 0.83
-    config['LIGHTNING_CLEARED_INTERVAL'] = 2.00
-
-    try:
-        fh = open(filename, 'r')
-        for line in fh:
-            line = line.replace('\n', '')
-            if len(line) < 3:
-                continue
-            if line[0] == '#':
-                continue
-
-            keyword, value = line.split(None, 1)
-            config[keyword] = value
-    except Exception as err:
-        print("WARNING:  could not parse configuration file '%s': %s" % (filename, str(err)))
-
-    return config
 
 
 def computeChecksum(text):
@@ -247,7 +208,7 @@ def main(args):
     # Set the serial port parameters
     efm100 = serial.Serial()
     efm100.timeout = 0.5
-    efm100.port = args.config_file['SERIAL_PORT']
+    efm100.port = args.config_file['serial_port']
     efm100.baudrate = 9600
     efm100.bytesize = 8
     efm100.stopbits = 1
@@ -282,17 +243,17 @@ def main(args):
         text = ''
         
     # Start the data server
-    server = dataServer(mcastAddr=args.config_file['MCAST_ADDR'], mcastPort=int(args.config_file['MCAST_PORT']), 
-                        sendPort=int(args.config_file['SEND_PORT']))
+    server = dataServer(mcastAddr=args.config_file['multicast']['ip'], mcastPort=int(args.config_file['multicast']['port']), 
+                        sendPort=int(args.config_file['multicast']['port'])+1)
     server.start()
 
     # Set the warning suppression interval
     fieldHigh = False
     lightningDetected = False
-    fieldInterval = timedelta(0, int(60*float(args.config_file['FIELD_REPORT_INTERVAL'])))
-    fieldClearedInterval = timedelta(0, int(60*float(args.config_file['FIELD_CLEARED_INTERVAL'])))
-    lightningInterval = timedelta(0, int(60*float(args.config_file['LIGHTNING_REPORT_INTERVAL'])))
-    lightningClearedInterval = timedelta(0, int(60*float(args.config_file['LIGHTNING_CLEARED_INTERVAL'])))
+    fieldInterval = timedelta(0, int(60*float(args.config_file['efield']['report_interval'])))
+    fieldClearedInterval = timedelta(0, int(60*float(args.config_file['efield']['cleared_interval'])))
+    lightningInterval = timedelta(0, int(60*float(args.config_file['lightning']['report_interval'])))
+    lightningClearedInterval = timedelta(0, int(60*float(args.config_file['lightning']['cleared_interval'])))
     
     lastFieldEvent = None
     lastLightningEvent = None
@@ -430,7 +391,7 @@ if __name__ == "__main__":
         description='read data from a Boltek EFM-100 atmosphereic electric field monintor and broadcast field change and lightning events via UDP multi-cast',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
             )
-    parser.add_argument('-c', '--config-file', type=str, default='lightning.cfg',
+    parser.add_argument('-c', '--config-file', type=str, default='lightning.json',
                         help='filename for the configuration file')
     parser.add_argument('-p', '--pid-file', type=str,
                         help='file to write the current PID to')
@@ -443,8 +404,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Parse the configuration file
-    args.config_file = parseConfigFile(args.config_file)
-    
+    with open(args.config_file, 'r') as ch:
+        args.config_file = json.loads(json_minify.json_minify(ch.read()))
+        
     if not args.foreground:
         daemonize('/dev/null','/tmp/sc-stdout','/tmp/sc-stderr')
         
