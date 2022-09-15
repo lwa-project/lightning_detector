@@ -56,6 +56,8 @@ def sendEmail(subject, message, debug=False):
     Send an e-mail via the LWA1 operator list
     """
     
+    message = "%s\n\nEmail ID: %s" % (message, str(uuid.uuid4()))
+    
     rcpt = []
     msg = MIMEText(message)
     msg['Subject'] = subject
@@ -67,8 +69,6 @@ def sendEmail(subject, message, debug=False):
         msg['Cc'] = ','.join(CC)
         rcpt.extend(CC)
         
-    message = "%s\n\nEmail ID: %s" % (message, str(uuid.uuid4()))
-    
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         if debug:
