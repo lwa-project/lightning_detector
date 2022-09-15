@@ -63,6 +63,7 @@ def sendEmail(subject, message, debug=False):
     msg['Subject'] = subject
     msg['From'] = FROM
     msg['To'] = ','.join(TO)
+    msg.add_header('reply-to', TO[0])
     
     rcpt.extend(TO)
     if len(CC):
