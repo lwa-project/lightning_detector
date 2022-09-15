@@ -11,6 +11,7 @@ import os
 import sys
 import pytz
 import time
+import uuid
 import socket
 import argparse
 import threading
@@ -66,6 +67,8 @@ def sendEmail(subject, message, debug=False):
         msg['Cc'] = ','.join(CC)
         rcpt.extend(CC)
         
+    message = "%s\n\nEmail ID: %s" % (message, str(uuid.uuid4()))
+    
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         if debug:
