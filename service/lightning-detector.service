@@ -24,7 +24,7 @@ Environment=PYTHONUNBUFFERED=1
 ExecStart=/bin/bash -ec '\
 cd /lwa/LightningDetector && \
 python3 spinningCan.py \
-				 --config-file /lwa/LightningDetector/lightning.json \
+         --config-file /lwa/LightningDetector/defaults.json \
          --log-file    /lwa/LightningDetector/logs/lightning.log \
          --record-to   /lwa/LightningDetector/logs/field.log'
 	
