@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """
 Command line interface to the lightning data served up by spinningCan.py.
 """
-
-from __future__ import print_function
 
 import os
 import sys
@@ -23,6 +20,8 @@ from email.mime.text import MIMEText
 import re
 from datetime import datetime, timedelta
 
+from lwa_auth import STORE as LWA_AUTH_STORE
+
 dataRE = re.compile(r'^\[(?P<date>.*)\] (?P<type>[A-Z]*): (?P<data>.*)$')
 
 # Site
@@ -33,18 +32,9 @@ TO = ['lwa1ops-l@list.unm.edu',]
 CC = []
 
 # SMTP user and password
-if SITE == 'lwa1':
-    FROM = 'lwa.station.1@gmail.com'
-    PASS = 'rzsxktfuudvfeqsv'
-elif SITE == 'lwasv':
-    FROM = 'lwa.station.sv@gmail.com'
-    PASS = 'xuyqpylcarzfyrlo'
-    CC.append('jntille@sandia.gov')
-elif SITE == 'lwana':
-    FROM = 'lwa.station.na@gmail.com'
-    PASS = 'xsphaddgntptmgqm'
-else:
-    raise RuntimeError("Unknown site '%s'" % SITE)
+store_entry = LWA_AUTH_STORE.get('email')
+self.FROM = store_entry.username
+self.PASS = store_entry.password
 
 # Timezones
 UTC = pytz.utc

@@ -1,5 +1,6 @@
-serial
+json_minify
+lwa_auth
 numpy
 pytz
-json_minify
 requests
+serial
