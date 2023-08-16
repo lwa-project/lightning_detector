@@ -8,7 +8,7 @@ from socket import gethostname
 from lwa_auth import KEYS as LWA_AUTH_KEYS
 from lwa_auth.signed_requests import post as signed_post
 
-URL = "https://lda10g.unm.edu/metadata/sorter/upload"
+URL = "https://lda10g.alliance.unm.edu/metadata/sorter/upload"
 SITE = gethostname().split('-', 1)[0]
 TYPE = "SSLOG"
 
