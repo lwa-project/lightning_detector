@@ -42,7 +42,7 @@ ESRV = store_entry.url
 
 # Timezones
 UTC = ZoneInfo('UTC')
-MST = ZoneInfo('US/Mountain')
+MST = ZoneInfo('America/Denver')
 
 
 def sendEmail(subject, message, debug=False):

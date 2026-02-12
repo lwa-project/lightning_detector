@@ -16,7 +16,7 @@ from efield import ElectricField
 
 # MST7MDT
 UTC = ZoneInfo('UTC')
-MST = ZoneInfo('US/Mountain')
+MST = ZoneInfo('America/Denver')
 
 # Date formating string
 dateFmt = "%Y-%m-%d %H:%M:%S.%f"
