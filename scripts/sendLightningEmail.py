@@ -6,7 +6,10 @@ Command line interface to the lightning data served up by spinningCan.py.
 
 import os
 import sys
-import pytz
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 import time
 import uuid
 import socket
@@ -38,8 +41,8 @@ PASS = store_entry.password
 ESRV = store_entry.url
 
 # Timezones
-UTC = pytz.utc
-MST = pytz.timezone('US/Mountain')
+UTC = ZoneInfo('UTC')
+MST = ZoneInfo('US/Mountain')
 
 
 def sendEmail(subject, message, debug=False):
@@ -81,7 +84,7 @@ def sendWarning(limit, strikeList):
     """
     
     tNow = datetime.utcnow()
-    tNow = UTC.localize(tNow)
+    tNow = tNow.replace(tzinfo=UTC)
     tNow = tNow.astimezone(MST)
     
     tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")
@@ -99,7 +102,7 @@ def sendClear(limit, clearTime):
     """
     
     tNow = datetime.utcnow()
-    tNow = UTC.localize(tNow)
+    tNow = tNow.replace(tzinfo=UTC)
     tNow = tNow.astimezone(MST)
     
     tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")

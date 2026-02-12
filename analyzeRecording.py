@@ -4,7 +4,10 @@
 from __future__ import print_function
 
 import sys
-import pytz
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 import numpy
 from datetime import datetime
 from matplotlib import pyplot as plt
@@ -12,8 +15,8 @@ from matplotlib import pyplot as plt
 from efield import ElectricField
 
 # MST7MDT
-UTC = pytz.utc
-MST = pytz.timezone('US/Mountain')
+UTC = ZoneInfo('UTC')
+MST = ZoneInfo('US/Mountain')
 
 # Date formating string
 dateFmt = "%Y-%m-%d %H:%M:%S.%f"
@@ -35,7 +38,7 @@ while True:
         t, f = line.split('  ', 1)
 
         # Convert the time to datetime object (in MST/MDT) and the field to a float
-        t = UTC.localize(datetime.strptime(t, dateFmt))
+        t = datetime.strptime(t, dateFmt).replace(tzinfo=UTC)
         f, junk = f.split(None, 1)
         f = float(f)
         

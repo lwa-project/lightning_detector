@@ -1,6 +1,6 @@
 json_minify
 lwa_auth
 numpy
-pytz
+backports.zoneinfo;python_version<"3.9"
 requests
 serial

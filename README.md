@@ -8,7 +8,7 @@ Electric Field Monitor V1.18 Software".
 
 This software depends on the following Python modules:
   * pySerial
-  * pytz
+  * backports.zoneinfo (Python < 3.9 only)
   * wxPython
 
 Contents
