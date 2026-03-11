@@ -1,18 +1,15 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 Broadcast lightning data served up by spinningCan.py using TCP.
 """
-
-from __future__ import print_function
 
 import sys
 import time
 import select
 import socket
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # Date formating string
@@ -53,14 +50,14 @@ def EFM100(mcastAddr="224.168.2.9", mcastPort=7163):
     connections, addresses = [], []
     
     # Main reading loop
-    tlast = datetime.utcnow()
+    tlast = datetime.now(tz=timezone.utc)
     try:
         while True:
             try:
                 data, addr = sock.recvfrom(1024)
-                tlast = datetime.utcnow()
+                tlast = datetime.now(tz=timezone.utc)
             except socket.error as e:
-                t = datetime.utcnow()
+                t = datetime.now(tz=timezone.utc)
                 age = t - tlast
                 data = "[%s] NODATA: No data received after %.1f s" % (t.strftime(dateFmt), age.total_seconds())
                 try:

@@ -15,7 +15,7 @@ import socket
 import argparse
 import threading
 import json_minify
-from datetime import datetime, timedelta
+#from datetime import datetime, timedelta, timezone
 
 from efield import ElectricField
 
@@ -201,7 +201,7 @@ def main(args):
                 
                 # Parse the string and extract the various bits that we are
                 # interested in using parseField and record it if needed
-                t = datetime.utcnow()
+                t = datetime.now(tz=timezone.utc)
                 f, s, v = parseField(text)
                 if v:
                     rFH.write("%s  %+7.3f kV/m\n" % (t.strftime(dateFmt), f))

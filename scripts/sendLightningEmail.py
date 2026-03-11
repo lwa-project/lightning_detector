@@ -21,7 +21,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from lwa_auth import STORE as LWA_AUTH_STORE
 
@@ -41,7 +41,6 @@ PASS = store_entry.password
 ESRV = store_entry.url
 
 # Timezones
-UTC = ZoneInfo('UTC')
 MST = ZoneInfo('America/Denver')
 
 
@@ -83,8 +82,7 @@ def sendWarning(limit, strikeList):
     Send a `lightning in the vicinity` warnings.
     """
     
-    tNow = datetime.utcnow()
-    tNow = tNow.replace(tzinfo=UTC)
+    tNow = datetime.now(tz=timezone.utc)
     tNow = tNow.astimezone(MST)
     
     tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")
@@ -101,8 +99,7 @@ def sendClear(limit, clearTime):
     Send an "all clear" e-mail.
     """
     
-    tNow = datetime.utcnow()
-    tNow = tNow.replace(tzinfo=UTC)
+    tNow = datetime.now(tz=timezone.utc)
     tNow = tNow.astimezone(MST)
     
     tNow = tNow.strftime("%B %d, %Y %H:%M:%S %Z")
