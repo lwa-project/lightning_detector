@@ -29,7 +29,6 @@ python3 spinningCan.py \
          --config-file /lwa/LightningDetector/defaults.json \
          --log-file    /lwa/LightningDetector/logs/lightning.log \
          --record-to   /lwa/LightningDetector/logs/field.log'
-	
 
 [Install]
 WantedBy=multi-user.target
