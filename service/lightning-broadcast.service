@@ -4,7 +4,9 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=root
+# Run as the specified user
+User=ops
+
 # Add a delay between stop and start in a restart to allows the sockets to clear
 Restart=always
 RestartSec=60
